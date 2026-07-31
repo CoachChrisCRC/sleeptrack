@@ -1,0 +1,821 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Circular Roots | Sleep Debt Tracker Pro</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#121d17">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Circular%20Roots%20Sleep%20Debt%22%2C%22short_name%22%3A%22SleepDebt%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a100d%22%2C%22theme_color%22%3A%22%23121d17%22%2C%22icons%22%3A%5B%5D%7D">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0a100d;
+            color: #e2e8f0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(22, 38, 28, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(74, 222, 128, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-input {
+            background: rgba(10, 16, 13, 0.8);
+            border: 1px solid rgba(74, 222, 128, 0.25);
+            color: #ffffff;
+        }
+        .glass-input:focus {
+            border-color: #4ade80;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+        }
+
+        /* Custom range slider styling */
+        input[type=range] {
+            accent-color: #4ade80;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(74, 222, 128, 0.3);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start pb-24">
+
+    <!-- Top App Bar -->
+    <header class="w-full max-w-md pt-6 px-4 pb-3 flex items-center justify-between sticky top-0 bg-[#0a100d]/90 backdrop-blur-md z-40 border-b border-emerald-500/10">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl glass-card flex items-center justify-center text-emerald-400 font-bold text-lg border border-emerald-500/30">
+                <i class="fa-solid fa-seedling"></i>
+            </div>
+            <div>
+                <h1 class="text-xs font-semibold tracking-wider text-emerald-400 uppercase">Circular Roots</h1>
+                <p class="text-xs text-emerald-200/70 font-medium">Sleep Debt & Recovery Tracker</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="switchTab('analytics')" id="navAnalyticsBtn" class="w-9 h-9 rounded-xl glass-card flex items-center justify-center text-emerald-300 hover:text-white transition text-xs" title="Analytics & Trends">
+                <i class="fa-solid fa-chart-pie"></i>
+            </button>
+            <button onclick="openSettings()" class="w-9 h-9 rounded-xl glass-card flex items-center justify-center text-emerald-300 hover:text-white transition text-xs" title="Settings & Targets">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <main class="w-full max-w-md px-4 space-y-4 mt-3">
+
+        <!-- TAB: DASHBOARD -->
+        <div id="tabDashboard" class="space-y-4">
+            
+            <!-- Cumulative Sleep Debt Overview Card -->
+            <section class="glass-card rounded-3xl p-6 relative overflow-hidden text-center">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="flex justify-center items-center space-x-2 mb-2">
+                    <span class="text-xs font-semibold tracking-widest text-emerald-400 uppercase bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/20">Cumulative Debt</span>
+                    <select id="debtWindowSelect" onchange="updateDebtWindow(this.value)" class="bg-emerald-950/80 text-emerald-300 text-[11px] rounded-full px-2 py-0.5 border border-emerald-500/20 outline-none">
+                        <option value="7">7-Day</option>
+                        <option value="14" selected>14-Day</option>
+                        <option value="30">30-Day</option>
+                    </select>
+                </div>
+                
+                <div class="mt-3">
+                    <h2 id="totalDebtDisplay" class="text-4xl font-extrabold tracking-tight text-white">0.0 <span class="text-xl font-medium text-emerald-300">hrs</span></h2>
+                    <p id="debtSubtitle" class="text-xs text-emerald-200/70 mt-1.5 leading-relaxed">Your body keeps score. Optimal recovery state maintained.</p>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-emerald-500/15">
+                    <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 text-left">
+                        <span class="text-[10px] uppercase font-semibold text-emerald-400/70 block">Target Sleep</span>
+                        <span id="targetDisplay" class="text-base font-bold text-white">8.0 hrs</span>
+                    </div>
+                    <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 text-left">
+                        <span class="text-[10px] uppercase font-semibold text-emerald-400/70 block">Window Average</span>
+                        <span id="avgDisplay" class="text-base font-bold text-white">0.0 hrs</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recovery Planner / AI Coach Insight Card -->
+            <section id="recoveryPlannerCard" class="glass-card rounded-3xl p-5 border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 to-emerald-900/10">
+                <div class="flex items-center space-x-2.5 mb-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300">Recovery & Payback Plan</h3>
+                </div>
+                <p id="recoveryAdviceText" class="text-xs text-emerald-100/80 leading-relaxed">
+                    Calculating recovery recommendation based on your recent sleep patterns...
+                </p>
+            </section>
+
+            <!-- Quick Sleep Log (Slider & Quick Buttons) -->
+            <section class="glass-card rounded-3xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-bolt text-emerald-400 mr-2"></i> Quick Sleep Log
+                    </h3>
+                    <span id="quickLogDateLabel" class="text-xs font-medium text-emerald-300/80">Today</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs text-emerald-200/70 mb-1">
+                            <span>Hours Slept</span>
+                            <span id="sliderValueDisplay" class="font-bold text-emerald-400 text-sm">7.5 hrs</span>
+                        </div>
+                        <input type="range" id="quickHoursSlider" min="2" max="14" step="0.5" value="7.5" oninput="onSliderChange(this.value)" class="w-full h-2 bg-emerald-950 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setQuickHours(6)" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 rounded-xl text-xs font-semibold text-emerald-300 transition">6 hrs</button>
+                        <button onclick="setQuickHours(7)" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 rounded-xl text-xs font-semibold text-emerald-300 transition">7 hrs</button>
+                        <button onclick="setQuickHours(8)" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 rounded-xl text-xs font-semibold text-emerald-300 transition">8 hrs</button>
+                        <button onclick="setQuickHours(9)" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 rounded-xl text-xs font-semibold text-emerald-300 transition">9 hrs</button>
+                    </div>
+
+                    <button onclick="submitQuickLog()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>Log Last Night's Sleep</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Detailed Log Toggle & Form -->
+            <section class="glass-card rounded-3xl p-5">
+                <div onclick="toggleDetailedForm()" class="flex items-center justify-between cursor-pointer">
+                    <h3 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-sliders text-emerald-400 mr-2"></i> Detailed Bed/Wake Time Log
+                    </h3>
+                    <i id="detailedChevron" class="fa-solid fa-chevron-down text-emerald-300 text-xs transition-transform"></i>
+                </div>
+
+                <form id="detailedForm" onsubmit="handleDetailedLog(event)" class="space-y-3 mt-4 hidden pt-3 border-t border-emerald-500/15">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Date</label>
+                            <input type="date" id="detDate" required class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Bedtime</label>
+                            <input type="time" id="detBedtime" value="22:30" required class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Wake Time</label>
+                            <input type="time" id="detWakeTime" value="06:30" required class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Sleep Quality / Notes</label>
+                            <input type="text" id="detNote" placeholder="e.g. Deep & restorative" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl text-xs transition">
+                        Save Detailed Entry
+                    </button>
+                </form>
+            </section>
+
+        </div>
+
+        <!-- TAB: ANALYTICS & TRENDS -->
+        <div id="tabAnalytics" class="space-y-4 hidden">
+            <!-- Weekly Bar Chart -->
+            <section class="glass-card rounded-3xl p-5">
+                <h3 class="text-sm font-bold text-white mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-chart-column text-emerald-400 mr-2"></i> Weekly Sleep vs Target</span>
+                    <span class="text-[10px] text-emerald-300/70">7 Days</span>
+                </h3>
+                <div class="relative h-48 w-full">
+                    <canvas id="sleepChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Monthly Heatmap Calendar -->
+            <section class="glass-card rounded-3xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-calendar-days text-emerald-400 mr-2"></i> Monthly Heatmap
+                    </h3>
+                    <span id="heatmapMonthLabel" class="text-xs text-emerald-300 font-medium">Month</span>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-emerald-400/70 mb-1 font-semibold">
+                    <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+                <div id="heatmapGrid" class="grid grid-cols-7 gap-1.5">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-emerald-500/10 text-[10px] text-emerald-200/60">
+                    <span>Deficit</span>
+                    <div class="flex items-center space-x-1">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-rose-950/80 border border-rose-500/35"></span>
+                        <span class="w-2.5 h-2.5 rounded-sm bg-emerald-950/60"></span>
+                        <span class="w-2.5 h-2.5 rounded-sm bg-emerald-600"></span>
+                    </div>
+                    <span>Surplus / Target</span>
+                </div>
+            </section>
+
+            <!-- Weeknight vs Weekend Patterns -->
+            <section class="glass-card rounded-3xl p-5">
+                <h3 class="text-sm font-bold text-white mb-3 flex items-center">
+                    <i class="fa-solid fa-scale-balanced text-emerald-400 mr-2"></i> Weeknight vs Weekend
+                </h3>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10">
+                        <span class="text-[10px] uppercase font-semibold text-emerald-400/70 block mb-1">Weekdays Avg</span>
+                        <span id="weekdaysAvgDisplay" class="text-lg font-bold text-white">0.0 hrs</span>
+                    </div>
+                    <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10">
+                        <span class="text-[10px] uppercase font-semibold text-emerald-400/70 block mb-1">Weekends Avg</span>
+                        <span id="weekendsAvgDisplay" class="text-lg font-bold text-white">0.0 hrs</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Management & Export -->
+            <section class="glass-card rounded-3xl p-5 space-y-3">
+                <h3 class="text-sm font-bold text-white flex items-center">
+                    <i class="fa-solid fa-file-arrow-down text-emerald-400 mr-2"></i> Data & Backup
+                </h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="exportCSV()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <button onclick="triggerFileImport()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Import Data</span>
+                    </button>
+                    <input type="file" id="importFile" accept=".json,.csv" onchange="importData(event)" class="hidden">
+                </div>
+            </section>
+        </div>
+
+        <!-- Recent Logs History Section (Always accessible on dashboard) -->
+        <section id="historySection" class="glass-card rounded-3xl p-5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-white flex items-center"><i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-2"></i> Sleep History</h3>
+                <span id="logCount" class="text-xs text-emerald-300/70">0 entries</span>
+            </div>
+            <div id="historyList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <div class="text-center py-6 text-xs text-emerald-200/50">No logs recorded yet. Start tracking above!</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0a100d]/95 backdrop-blur-md border-t border-emerald-500/15 py-3 px-6 flex justify-around items-center z-40">
+        <button onclick="switchTab('dashboard')" id="navTabDashboard" class="flex flex-col items-center text-emerald-400 transition">
+            <i class="fa-solid fa-house-chimney text-base mb-1"></i>
+            <span class="text-[10px] font-semibold">Track</span>
+        </button>
+        <button onclick="switchTab('analytics')" id="navTabAnalytics" class="flex flex-col items-center text-emerald-300/50 hover:text-emerald-300 transition">
+            <i class="fa-solid fa-chart-line text-base mb-1"></i>
+            <span class="text-[10px] font-semibold">Analytics</span>
+        </button>
+        <button onclick="openSettings()" class="flex flex-col items-center text-emerald-300/50 hover:text-emerald-300 transition">
+            <i class="fa-solid fa-gear text-base mb-1"></i>
+            <span class="text-[10px] font-semibold">Settings</span>
+        </button>
+    </nav>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card rounded-3xl w-full max-w-sm p-6 border border-emerald-500/30 space-y-4">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-base font-bold text-white flex items-center">
+                    <i class="fa-solid fa-sliders text-emerald-400 mr-2"></i> Sleep Settings
+                </h3>
+                <button onclick="closeSettings()" class="text-emerald-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200/70 mb-1">Daily Sleep Target (Hours)</label>
+                    <input type="number" step="0.5" id="settingTarget" class="glass-input w-full rounded-xl px-3 py-2 text-xs" value="8.0">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200/70 mb-1">Default Debt Window (Days)</label>
+                    <select id="settingWindow" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        <option value="7">7 Days</option>
+                        <option value="14" selected>14 Days</option>
+                        <option value="30">30 Days</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-emerald-200/70 mb-1">Bedtime Reminder (Nudge)</label>
+                    <div class="flex space-x-2">
+                        <input type="time" id="settingReminderTime" value="22:00" class="glass-input flex-1 rounded-xl px-3 py-2 text-xs">
+                        <button onclick="toggleBedtimeReminder()" id="reminderToggleBtn" class="px-4 py-2 bg-emerald-950 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs font-semibold">Enable</button>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex space-x-2">
+                    <button onclick="saveSettings()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Save Settings</button>
+                    <button onclick="resetData()" class="px-4 py-2.5 bg-rose-950/60 border border-rose-500/30 text-rose-300 hover:bg-rose-900/60 font-semibold rounded-xl text-xs transition">Reset</button>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-emerald-500/20 text-center">
+                <p class="text-[10px] text-emerald-300/60 font-semibold">Circular Roots Coaching • Coach Chris</p>
+                <a href="https://coachchriscrc.mvt.so" target="_blank" class="text-[10px] text-emerald-400 hover:underline mt-1 inline-block">coachchriscrc.mvt.so <i class="fa-solid fa-external-link-alt text-[9px]"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 glass-card px-4 py-2.5 rounded-2xl text-xs text-emerald-200 border border-emerald-500/30 shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50">
+        Saved successfully!
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // State Management
+        let settings = JSON.parse(localStorage.getItem('cr_sleep_settings')) || { target: 8.0, windowDays: 14, reminderTime: '22:00', reminderActive: false };
+        let sleepLogs = JSON.parse(localStorage.getItem('cr_sleep_logs')) || [];
+        let sleepChartInstance = null;
+        let currentTab = 'dashboard';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize form fields
+            document.getElementById('settingTarget').value = settings.target;
+            document.getElementById('settingWindow').value = settings.windowDays;
+            document.getElementById('settingReminderTime').value = settings.reminderTime;
+            document.getElementById('debtWindowSelect').value = settings.windowDays;
+            
+            if (settings.reminderActive) {
+                document.getElementById('reminderToggleBtn').innerText = 'Active';
+                document.getElementById('reminderToggleBtn').classList.add('bg-emerald-600', 'text-white');
+            }
+
+            // Set default dates
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('detDate').value = todayStr;
+
+            initChart();
+            renderApp();
+            
+            // Check reminder interval every minute
+            setInterval(checkBedtimeReminder, 60000);
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const dashTab = document.getElementById('tabDashboard');
+            const analTab = document.getElementById('tabAnalytics');
+            const navDash = document.getElementById('navTabDashboard');
+            const navAnal = document.getElementById('navTabAnalytics');
+
+            if (tab === 'dashboard') {
+                dashTab.classList.remove('hidden');
+                analTab.classList.add('hidden');
+                navDash.className = "flex flex-col items-center text-emerald-400 transition";
+                navAnal.className = "flex flex-col items-center text-emerald-300/50 hover:text-emerald-300 transition";
+            } else {
+                dashTab.classList.add('hidden');
+                analTab.classList.remove('hidden');
+                navAnal.className = "flex flex-col items-center text-emerald-400 transition";
+                navDash.className = "flex flex-col items-center text-emerald-300/50 hover:text-emerald-300 transition";
+                updateChart();
+                renderHeatmap();
+            }
+        }
+
+        function onSliderChange(val) {
+            document.getElementById('sliderValueDisplay').innerText = parseFloat(val).toFixed(1) + ' hrs';
+        }
+
+        function setQuickHours(hrs) {
+            document.getElementById('quickHoursSlider').value = hrs;
+            onSliderChange(hrs);
+        }
+
+        function submitQuickLog() {
+            const hours = parseFloat(document.getElementById('quickHoursSlider').value);
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            upsertLog(todayStr, hours, "Quick logged");
+            showToast(`Logged ${hours} hrs for today.`);
+        }
+
+        function toggleDetailedForm() {
+            const form = document.getElementById('detailedForm');
+            const chevron = document.getElementById('detailedChevron');
+            form.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function handleDetailedLog(e) {
+            e.preventDefault();
+            const date = document.getElementById('detDate').value;
+            const bedtime = document.getElementById('detBedtime').value;
+            const wakeTime = document.getElementById('detWakeTime').value;
+            const note = document.getElementById('detNote').value.trim();
+
+            // Calculate hours between bedtime and wake time
+            let [bHour, bMin] = bedtime.split(':').map(Number);
+            let [wHour, wMin] = wakeTime.split(':').map(Number);
+            
+            let bedMinutes = bHour * 60 + bMin;
+            let wakeMinutes = wHour * 60 + wMin;
+            
+            if (wakeMinutes <= bedMinutes) {
+                wakeMinutes += 24 * 60; // crossed midnight
+            }
+            
+            let hours = parseFloat(((wakeMinutes - bedMinutes) / 60).toFixed(2));
+            if (hours > 24) hours = 24;
+
+            upsertLog(date, hours, note || `Bed: ${bedtime} - Wake: ${wakeTime}`);
+            document.getElementById('detNote').value = '';
+            showToast(`Detailed sleep logged: ${hours} hrs.`);
+        }
+
+        function upsertLog(date, hours, note) {
+            const existingIdx = sleepLogs.findIndex(l => l.date === date);
+            if (existingIdx > -1) {
+                sleepLogs[existingIdx].hours = hours;
+                sleepLogs[existingIdx].note = note;
+            } else {
+                sleepLogs.push({ id: Date.now(), date, hours, note });
+            }
+            sleepLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            saveAndRefresh();
+        }
+
+        function deleteLog(id) {
+            sleepLogs = sleepLogs.filter(l => l.id !== id);
+            saveAndRefresh();
+            showToast("Sleep entry deleted.");
+        }
+
+        function updateDebtWindow(windowDays) {
+            settings.windowDays = parseInt(windowDays);
+            localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+            renderApp();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('cr_sleep_logs', JSON.stringify(sleepLogs));
+            renderApp();
+        }
+
+        function renderApp() {
+            document.getElementById('targetDisplay').innerText = settings.target.toFixed(1) + ' hrs';
+            
+            const windowDays = settings.windowDays;
+            const sortedLogs = [...sleepLogs].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const windowLogs = sortedLogs.slice(-windowDays);
+
+            let totalDebt = 0;
+            let sumHours = 0;
+
+            windowLogs.forEach(l => {
+                totalDebt += (settings.target - l.hours);
+            });
+
+            if (windowLogs.length > 0) {
+                sumHours = windowLogs.reduce((acc, curr) => acc + curr.hours, 0);
+                const avg = sumHours / windowLogs.length;
+                document.getElementById('avgDisplay').innerText = avg.toFixed(1) + ' hrs';
+            } else {
+                document.getElementById('avgDisplay').innerText = '0.0 hrs';
+            }
+
+            // Render Debt Banner
+            const debtEl = document.getElementById('totalDebtDisplay');
+            const subEl = document.getElementById('debtSubtitle');
+            
+            if (totalDebt > 0.1) {
+                debtEl.innerHTML = `+${totalDebt.toFixed(1)} <span class="text-xl font-medium text-rose-400">hrs debt</span>`;
+                subEl.innerText = `You have accumulated a sleep deficit over the last ${windowDays} days. Prioritize recovery.`;
+            } else if (totalDebt < -0.1) {
+                debtEl.innerHTML = `${totalDebt.toFixed(1)} <span class="text-xl font-medium text-emerald-400">hrs surplus</span>`;
+                subEl.innerText = `Excellent recovery! You are well rested and ahead of target.`;
+            } else {
+                debtEl.innerHTML = `0.0 <span class="text-xl font-medium text-emerald-300">hrs</span>`;
+                subEl.innerText = `Optimal recovery state maintained. Perfect consistency.`;
+            }
+
+            // Recovery Planner AI Coach text
+            const adviceEl = document.getElementById('recoveryAdviceText');
+            if (totalDebt > 3.0) {
+                adviceEl.innerHTML = `<strong>High Debt Alert:</strong> Add 30-45 minutes to your sleep schedule over the next 3 nights or integrate a short afternoon power nap. Keep training sessions focused on mobility and low intensity until debt drops below 1.5 hrs.`;
+            } else if (totalDebt > 0) {
+                adviceEl.innerHTML = `<strong>Mild Deficit:</strong> Aim to get to bed 15-20 minutes earlier tonight. Keep your wake-up time consistent to protect your circadian rhythm.`;
+            } else {
+                adviceEl.innerHTML = `<strong>Optimal Recovery:</strong> Your nervous system is primed for high-performance training and functional movement. Maintain your current sleep hygiene.`;
+            }
+
+            // Weekday vs Weekend patterns
+            let weekdaySum = 0, weekdayCount = 0;
+            let weekendSum = 0, weekendCount = 0;
+            sleepLogs.forEach(l => {
+                const dayOfWeek = new Date(l.date + 'T00:00:00').getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    weekendSum += l.hours;
+                    weekendCount++;
+                } else {
+                    weekdaySum += l.hours;
+                    weekdayCount++;
+                }
+            });
+            document.getElementById('weekdaysAvgDisplay').innerText = weekdayCount > 0 ? (weekdaySum / weekdayCount).toFixed(1) + ' hrs' : '0.0 hrs';
+            document.getElementById('weekendsAvgDisplay').innerText = weekendCount > 0 ? (weekendSum / weekendCount).toFixed(1) + ' hrs' : '0.0 hrs';
+
+            // Render History List
+            const historyContainer = document.getElementById('historyList');
+            document.getElementById('logCount').innerText = `${sleepLogs.length} entries`;
+
+            if (sleepLogs.length === 0) {
+                historyContainer.innerHTML = `<div class="text-center py-6 text-xs text-emerald-200/50">No logs recorded yet. Start tracking above!</div>`;
+            } else {
+                historyContainer.innerHTML = sleepLogs.map(log => `
+                    <div class="bg-emerald-950/40 p-3 rounded-xl border border-emerald-500/10 flex items-center justify-between text-xs">
+                        <div>
+                            <div class="font-semibold text-white flex items-center space-x-2">
+                                <span>${formatDateDisplay(log.date)}</span>
+                                <span class="px-2 py-0.5 rounded-md ${log.hours >= settings.target ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-300 border border-rose-500/20'}">${log.hours} hrs</span>
+                            </div>
+                            ${log.note ? `<p class="text-emerald-200/60 mt-1 italic">${escapeHtml(log.note)}</p>` : ''}
+                        </div>
+                        <button onclick="deleteLog(${log.id})" class="text-emerald-400/50 hover:text-rose-400 p-2 transition"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            if (currentTab === 'analytics') {
+                updateChart();
+                renderHeatmap();
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('sleepChart').getContext('2d');
+            sleepChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Hours Slept',
+                            data: [],
+                            backgroundColor: 'rgba(74, 222, 128, 0.65)',
+                            borderColor: 'rgba(74, 222, 128, 1)',
+                            borderWidth: 1,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Target',
+                            data: [],
+                            type: 'line',
+                            borderColor: 'rgba(244, 63, 94, 0.75)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            borderDash: [4, 4]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(226, 232, 240, 0.6)', font: { size: 10 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 14,
+                            grid: { color: 'rgba(74, 222, 128, 0.05)' },
+                            ticks: { color: 'rgba(226, 232, 240, 0.6)', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!sleepChartInstance) return;
+            const chartData = [...sleepLogs].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-7);
+            sleepChartInstance.data.labels = chartData.map(l => formatShortDate(l.date));
+            sleepChartInstance.data.datasets[0].data = chartData.map(l => l.hours);
+            sleepChartInstance.data.datasets[1].data = chartData.map(() => settings.target);
+            sleepChartInstance.update();
+        }
+
+        function renderHeatmap() {
+            const grid = document.getElementById('heatmapGrid');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            
+            document.getElementById('heatmapMonthLabel').innerText = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
+            // Adjust to Monday start
+            const offset = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            let html = '';
+            for (let i = 0; i < offset; i++) {
+                html += `<div class="aspect-square rounded-lg bg-emerald-950/10 opacity-30"></div>`;
+            }
+
+            const logsMap = {};
+            sleepLogs.forEach(l => { logsMap[l.date] = l.hours; });
+
+            for (let d = 1; d <= totalDays; d++) {
+                const monthStr = String(month + 1).padStart(2, '0');
+                const dayStr = String(d).padStart(2, '0');
+                const dateKey = `${year}-${monthStr}-${dayStr}`;
+                
+                const loggedHours = logsMap[dateKey];
+                let bgClass = "bg-emerald-950/30 border border-emerald-500/10";
+                
+                if (loggedHours !== undefined) {
+                    if (loggedHours >= settings.target) {
+                        bgClass = "bg-emerald-600 border border-emerald-400";
+                    } else if (loggedHours >= settings.target - 1.5) {
+                        bgClass = "bg-emerald-800/80 border border-emerald-600";
+                    } else {
+                        bgClass = "bg-rose-950/80 border border-rose-500/40";
+                    }
+                }
+
+                html += `<div class="aspect-square rounded-lg ${bgClass} flex items-center justify-center text-[10px] font-semibold text-white" title="${dateKey}: ${loggedHours !== undefined ? loggedHours + ' hrs' : 'No log'}">${d}</div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        // CSV Export / Import
+        function exportCSV() {
+            if (sleepLogs.length === 0) {
+                showToast("No sleep logs to export.");
+                return;
+            }
+            let csv = "Date,HoursSlept,Note\n";
+            sleepLogs.forEach(l => {
+                csv += `${l.date},${l.hours},"${(l.note || '').replace(/"/g, '""')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `circular_roots_sleep_debt_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast("CSV exported successfully.");
+        }
+
+        function triggerFileImport() {
+            document.getElementById('importFile').click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const text = evt.target.result;
+                    if (file.name.endsWith('.csv') || text.includes(',')) {
+                        const lines = text.split('\n');
+                        for (let i = 1; i < lines.length; i++) {
+                            const row = lines[i].split(',');
+                            if (row.length >= 2) {
+                                const date = row[0].trim();
+                                const hours = parseFloat(row[1]);
+                                const note = row[2] ? row[2].replace(/^"|"$/g, '') : '';
+                                if (date && !isNaN(hours)) {
+                                    const existing = sleepLogs.find(l => l.date === date);
+                                    if (!existing) {
+                                        sleepLogs.push({ id: Date.now() + Math.random(), date, hours, note });
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        const imported = JSON.parse(text);
+                        if (Array.isArray(imported)) {
+                            sleepLogs = imported;
+                        }
+                    }
+                    sleepLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    saveAndRefresh();
+                    showToast("Data imported successfully!");
+                } catch(err) {
+                    showToast("Error parsing import file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Bedtime Reminder Check
+        function toggleBedtimeReminder() {
+            settings.reminderActive = !settings.reminderActive;
+            const btn = document.getElementById('reminderToggleBtn');
+            if (settings.reminderActive) {
+                btn.innerText = 'Active';
+                btn.classList.add('bg-emerald-600', 'text-white');
+                showToast("Bedtime reminder activated.");
+            } else {
+                btn.innerText = 'Enable';
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                showToast("Bedtime reminder disabled.");
+            }
+            localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+        }
+
+        function checkBedtimeReminder() {
+            if (!settings.reminderActive) return;
+            const now = new Date();
+            const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            if (currentTime === settings.reminderTime) {
+                showToast("Wind down reminder: Prepare for restful sleep tonight.");
+            }
+        }
+
+        // Settings modal
+        function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
+        function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function saveSettings() {
+            const t = parseFloat(document.getElementById('settingTarget').value);
+            const w = parseInt(document.getElementById('settingWindow').value);
+            const r = document.getElementById('settingReminderTime').value;
+            if (t > 0 && w > 0) {
+                settings.target = t;
+                settings.windowDays = w;
+                settings.reminderTime = r;
+                document.getElementById('debtWindowSelect').value = w;
+                localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+                closeSettings();
+                renderApp();
+                showToast("Settings updated successfully.");
+            }
+        }
+        function resetData() {
+            if (confirm("Are you sure you want to clear all sleep history?")) {
+                sleepLogs = [];
+                localStorage.removeItem('cr_sleep_logs');
+                closeSettings();
+                renderApp();
+                showToast("Data reset.");
+            }
+        }
+
+        // Utils
+        function formatDateDisplay(dStr) {
+            return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+        function formatShortDate(dStr) {
+            return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => { t.classList.add('opacity-0', 'pointer-events-none'); }, 3000);
+        }
+    </script>
+</body>
+</html>
+
+```
