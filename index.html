@@ -48,7 +48,6 @@
             box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
         }
 
-        /* Custom range slider styling */
         input[type=range] {
             accent-color: #4ade80;
         }
@@ -79,8 +78,9 @@
             </div>
         </div>
         <div class="flex items-center space-x-2">
-            <button onclick="switchTab('analytics')" id="navAnalyticsBtn" class="w-9 h-9 rounded-xl glass-card flex items-center justify-center text-emerald-300 hover:text-white transition text-xs" title="Analytics & Trends">
-                <i class="fa-solid fa-chart-pie"></i>
+            <button onclick="manualSaveData()" class="px-3 py-1.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-sm shadow-emerald-950" title="Manually save current metrics">
+                <i class="fa-solid fa-floppy-disk text-[11px]"></i>
+                <span>Save</span>
             </button>
             <button onclick="openSettings()" class="w-9 h-9 rounded-xl glass-card flex items-center justify-center text-emerald-300 hover:text-white transition text-xs" title="Settings & Targets">
                 <i class="fa-solid fa-sliders"></i>
@@ -138,7 +138,7 @@
                 </p>
             </section>
 
-            <!-- Quick Sleep Log (Slider & Quick Buttons) -->
+            <!-- Quick Sleep Log -->
             <section class="glass-card rounded-3xl p-5">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-bold text-white flex items-center">
@@ -266,23 +266,27 @@
             <!-- Data Management & Export -->
             <section class="glass-card rounded-3xl p-5 space-y-3">
                 <h3 class="text-sm font-bold text-white flex items-center">
-                    <i class="fa-solid fa-file-arrow-down text-emerald-400 mr-2"></i> Data & Backup
+                    <i class="fa-solid fa-file-arrow-down text-emerald-400 mr-2"></i> Data & Local Backup
                 </h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="exportCSV()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5">
-                        <i class="fa-solid fa-download"></i>
-                        <span>Export CSV</span>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="manualSaveData()" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Save Local</span>
                     </button>
-                    <button onclick="triggerFileImport()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5">
+                    <button onclick="exportCSV()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-download"></i>
+                        <span>CSV</span>
+                    </button>
+                    <button onclick="triggerFileImport()" class="py-2.5 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1">
                         <i class="fa-solid fa-upload"></i>
-                        <span>Import Data</span>
+                        <span>Import</span>
                     </button>
                     <input type="file" id="importFile" accept=".json,.csv" onchange="importData(event)" class="hidden">
                 </div>
             </section>
         </div>
 
-        <!-- Recent Logs History Section (Always accessible on dashboard) -->
+        <!-- Recent Logs History Section -->
         <section id="historySection" class="glass-card rounded-3xl p-5">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold text-white flex items-center"><i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-2"></i> Sleep History</h3>
@@ -369,7 +373,6 @@
         let currentTab = 'dashboard';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize form fields
             document.getElementById('settingTarget').value = settings.target;
             document.getElementById('settingWindow').value = settings.windowDays;
             document.getElementById('settingReminderTime').value = settings.reminderTime;
@@ -380,16 +383,25 @@
                 document.getElementById('reminderToggleBtn').classList.add('bg-emerald-600', 'text-white');
             }
 
-            // Set default dates
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('detDate').value = todayStr;
 
             initChart();
             renderApp();
             
-            // Check reminder interval every minute
             setInterval(checkBedtimeReminder, 60000);
         });
+
+        // Explicit Manual Save Function
+        function manualSaveData() {
+            try {
+                localStorage.setItem('cr_sleep_logs', JSON.stringify(sleepLogs));
+                localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+                showToast("All metrics & logs saved to local storage.");
+            } catch(e) {
+                showToast("Error saving data.");
+            }
+        }
 
         function switchTab(tab) {
             currentTab = tab;
@@ -444,7 +456,6 @@
             const wakeTime = document.getElementById('detWakeTime').value;
             const note = document.getElementById('detNote').value.trim();
 
-            // Calculate hours between bedtime and wake time
             let [bHour, bMin] = bedtime.split(':').map(Number);
             let [wHour, wMin] = wakeTime.split(':').map(Number);
             
@@ -452,7 +463,7 @@
             let wakeMinutes = wHour * 60 + wMin;
             
             if (wakeMinutes <= bedMinutes) {
-                wakeMinutes += 24 * 60; // crossed midnight
+                wakeMinutes += 24 * 60;
             }
             
             let hours = parseFloat(((wakeMinutes - bedMinutes) / 60).toFixed(2));
@@ -483,12 +494,12 @@
 
         function updateDebtWindow(windowDays) {
             settings.windowDays = parseInt(windowDays);
-            localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+            manualSaveData();
             renderApp();
         }
 
         function saveAndRefresh() {
-            localStorage.setItem('cr_sleep_logs', JSON.stringify(sleepLogs));
+            manualSaveData();
             renderApp();
         }
 
@@ -514,7 +525,6 @@
                 document.getElementById('avgDisplay').innerText = '0.0 hrs';
             }
 
-            // Render Debt Banner
             const debtEl = document.getElementById('totalDebtDisplay');
             const subEl = document.getElementById('debtSubtitle');
             
@@ -529,7 +539,6 @@
                 subEl.innerText = `Optimal recovery state maintained. Perfect consistency.`;
             }
 
-            // Recovery Planner AI Coach text
             const adviceEl = document.getElementById('recoveryAdviceText');
             if (totalDebt > 3.0) {
                 adviceEl.innerHTML = `<strong>High Debt Alert:</strong> Add 30-45 minutes to your sleep schedule over the next 3 nights or integrate a short afternoon power nap. Keep training sessions focused on mobility and low intensity until debt drops below 1.5 hrs.`;
@@ -539,7 +548,6 @@
                 adviceEl.innerHTML = `<strong>Optimal Recovery:</strong> Your nervous system is primed for high-performance training and functional movement. Maintain your current sleep hygiene.`;
             }
 
-            // Weekday vs Weekend patterns
             let weekdaySum = 0, weekdayCount = 0;
             let weekendSum = 0, weekendCount = 0;
             sleepLogs.forEach(l => {
@@ -555,7 +563,6 @@
             document.getElementById('weekdaysAvgDisplay').innerText = weekdayCount > 0 ? (weekdaySum / weekdayCount).toFixed(1) + ' hrs' : '0.0 hrs';
             document.getElementById('weekendsAvgDisplay').innerText = weekendCount > 0 ? (weekendSum / weekendCount).toFixed(1) + ' hrs' : '0.0 hrs';
 
-            // Render History List
             const historyContainer = document.getElementById('historyList');
             document.getElementById('logCount').innerText = `${sleepLogs.length} entries`;
 
@@ -645,8 +652,7 @@
             
             document.getElementById('heatmapMonthLabel').innerText = now.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-            const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
-            // Adjust to Monday start
+            const firstDayIndex = new Date(year, month, 1).getDay();
             const offset = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
             const totalDays = new Date(year, month + 1, 0).getDate();
 
@@ -681,7 +687,6 @@
             grid.innerHTML = html;
         }
 
-        // CSV Export / Import
         function exportCSV() {
             if (sleepLogs.length === 0) {
                 showToast("No sleep logs to export.");
@@ -745,7 +750,6 @@
             reader.readAsText(file);
         }
 
-        // Bedtime Reminder Check
         function toggleBedtimeReminder() {
             settings.reminderActive = !settings.reminderActive;
             const btn = document.getElementById('reminderToggleBtn');
@@ -758,7 +762,7 @@
                 btn.classList.remove('bg-emerald-600', 'text-white');
                 showToast("Bedtime reminder disabled.");
             }
-            localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+            manualSaveData();
         }
 
         function checkBedtimeReminder() {
@@ -770,9 +774,9 @@
             }
         }
 
-        // Settings modal
         function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+        
         function saveSettings() {
             const t = parseFloat(document.getElementById('settingTarget').value);
             const w = parseInt(document.getElementById('settingWindow').value);
@@ -782,12 +786,13 @@
                 settings.windowDays = w;
                 settings.reminderTime = r;
                 document.getElementById('debtWindowSelect').value = w;
-                localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
                 closeSettings();
+                manualSaveData();
                 renderApp();
                 showToast("Settings updated successfully.");
             }
         }
+
         function resetData() {
             if (confirm("Are you sure you want to clear all sleep history?")) {
                 sleepLogs = [];
@@ -798,7 +803,6 @@
             }
         }
 
-        // Utils
         function formatDateDisplay(dStr) {
             return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         }
