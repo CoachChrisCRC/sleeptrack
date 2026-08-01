@@ -229,14 +229,20 @@
             <section class="glass-card rounded-3xl p-5" id="swipeableChartSection">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center space-x-2">
-                        <button onclick="shiftChartWeek(-1)" class="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-500/20 text-emerald-300 hover:text-white flex items-center justify-center text-xs transition" title="Previous Week">
+                        <button onclick="shiftChartRange(-1)" class="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-500/20 text-emerald-300 hover:text-white flex items-center justify-center text-xs transition" title="Previous Range">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
                         <span id="chartRangeLabel" class="text-xs font-bold text-emerald-300">Oct 12 - Oct 18</span>
-                        <button onclick="shiftChartWeek(1)" id="nextWeekBtn" class="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-500/20 text-emerald-300 hover:text-white flex items-center justify-center text-xs transition disabled:opacity-30" title="Next Week">
+                        <button onclick="shiftChartRange(1)" id="nextRangeBtn" class="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-500/20 text-emerald-300 hover:text-white flex items-center justify-center text-xs transition disabled:opacity-30" title="Next Range">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
+                    <!-- View Mode Selector -->
+                    <select id="chartViewModeSelect" onchange="updateChartViewMode(this.value)" class="bg-emerald-950/80 text-emerald-300 text-[11px] rounded-xl px-2.5 py-1 border border-emerald-500/20 outline-none font-semibold">
+                        <option value="7" selected>7 Days</option>
+                        <option value="14">14 Days</option>
+                        <option value="month">1 Month</option>
+                    </select>
                 </div>
                 
                 <!-- Expanded Key Legend -->
@@ -258,7 +264,7 @@
                 <div class="relative h-48 w-full mt-2">
                     <canvas id="sleepChart"></canvas>
                 </div>
-                <p class="text-[10px] text-emerald-200/50 text-center mt-2">Swipe left/right or use arrows to view past weeks</p>
+                <p class="text-[10px] text-emerald-200/50 text-center mt-2">Swipe left/right or use arrows to view past periods</p>
             </section>
 
             <!-- Swipeable Monthly Heatmap Calendar -->
@@ -640,7 +646,8 @@
         let sleepLogs = JSON.parse(localStorage.getItem('cr_sleep_logs')) || [];
         let sleepChartInstance = null;
         let currentScreen = 'dashboard';
-        let chartWeekOffset = 0;
+        let chartOffset = 0;
+        let chartViewMode = '7'; // '7', '14', 'month'
         let heatmapMonthOffset = 0;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -821,10 +828,16 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function shiftChartWeek(direction) {
-            const newOffset = chartWeekOffset + direction;
+        function updateChartViewMode(mode) {
+            chartViewMode = mode;
+            chartOffset = 0; // reset pagination offset when changing mode
+            updateChart();
+        }
+
+        function shiftChartRange(direction) {
+            const newOffset = chartOffset + direction;
             if (newOffset <= 0) {
-                chartWeekOffset = newOffset;
+                chartOffset = newOffset;
                 updateChart();
             }
         }
@@ -846,8 +859,8 @@
             }, { passive: true });
             chartSection.addEventListener('touchend', (e) => {
                 let diff = e.changedTouches[0].screenX - chartStartX;
-                if (diff < -50 && chartWeekOffset < 0) shiftChartWeek(1);
-                if (diff > 50) shiftChartWeek(-1);
+                if (diff < -50 && chartOffset < 0) shiftChartRange(1);
+                if (diff > 50) shiftChartRange(-1);
             }, { passive: true });
 
             // Heatmap Swipe
@@ -1175,7 +1188,8 @@
                             tension: 0.3,
                             pointRadius: 2,
                             pointBackgroundColor: 'rgba(56, 189, 248, 1)',
-                            order: 1
+                            order: 1,
+                            spanGaps: false
                         },
                         {
                             label: 'Target',
@@ -1219,10 +1233,15 @@
 
             const today = new Date();
             const endDate = new Date(today);
-            endDate.setDate(today.getDate() + (chartWeekOffset * 7));
+            
+            let daysSpan = 7;
+            if (chartViewMode === '14') daysSpan = 14;
+            else if (chartViewMode === 'month') daysSpan = 30;
+
+            endDate.setDate(today.getDate() + (chartOffset * daysSpan));
 
             const startDate = new Date(endDate);
-            startDate.setDate(endDate.getDate() - 6);
+            startDate.setDate(endDate.getDate() - (daysSpan - 1));
 
             const dailyMap = {};
             sleepLogs.forEach(l => {
@@ -1240,17 +1259,22 @@
                 hoursData.push(loggedVal);
                 targetData.push(settings.target);
 
-                const currTime = new Date(dateStr + 'T00:00:00').getTime();
-                const past7DaysDays = aggregatedDays.filter(d => {
-                    const dTime = new Date(d.date + 'T00:00:00').getTime();
-                    return dTime <= currTime && dTime >= currTime - (6 * 24 * 60 * 60 * 1000);
-                });
+                // Trend line only populated when user actually inputted sleep data for that date
+                if (dailyMap[dateStr] !== undefined) {
+                    const currTime = new Date(dateStr + 'T00:00:00').getTime();
+                    const pastDays = aggregatedDays.filter(d => {
+                        const dTime = new Date(d.date + 'T00:00:00').getTime();
+                        return dTime <= currTime && dTime >= currTime - (6 * 24 * 60 * 60 * 1000);
+                    });
 
-                if (past7DaysDays.length > 0) {
-                    const sum = past7DaysDays.reduce((acc, curr) => acc + curr.hours, 0);
-                    trendData.push(parseFloat((sum / past7DaysDays.length).toFixed(2)));
+                    if (pastDays.length > 0) {
+                        const sum = pastDays.reduce((acc, curr) => acc + curr.hours, 0);
+                        trendData.push(parseFloat((sum / pastDays.length).toFixed(2)));
+                    } else {
+                        trendData.push(loggedVal);
+                    }
                 } else {
-                    trendData.push(settings.target);
+                    trendData.push(null); // leaves gap so trend line only shows on inputted days
                 }
 
                 curr.setDate(curr.getDate() + 1);
@@ -1258,7 +1282,7 @@
 
             const rangeLabel = `${formatShortDate(startDate.toISOString().split('T')[0])} - ${formatShortDate(endDate.toISOString().split('T')[0])}`;
             document.getElementById('chartRangeLabel').innerText = rangeLabel;
-            document.getElementById('nextWeekBtn').disabled = (chartWeekOffset >= 0);
+            document.getElementById('nextRangeBtn').disabled = (chartOffset >= 0);
 
             sleepChartInstance.data.labels = dates;
             sleepChartInstance.data.datasets[0].data = hoursData;
