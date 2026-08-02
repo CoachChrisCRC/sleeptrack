@@ -802,13 +802,13 @@
         }
 
         function openGraphInfoModal() {
-            let desc = "Visualizes actual hours slept against your target and rolling 7-day trend line.";
+            let desc = "Visualizes actual hours slept against your target and trend line.";
             if (chartViewMode === '7') {
-                desc = "7-Day View: Displays your actual sleep duration bar-by-bar across the active 7-day window. The cyan trend line calculates rolling averages continuously across all recorded points.";
+                desc = "7-Day View: Displays actual sleep duration bars. The cyan trend line plots exclusively on days with user-entered data and connects across gaps to show habit progression.";
             } else if (chartViewMode === '14') {
-                desc = "14-Day View: Displays your actual sleep duration across a 2-week block. Swipe left/right or use arrows to review past fortnightly cycles.";
+                desc = "14-Day View: Displays actual sleep duration across a 2-week block with connected active data points.";
             } else if (chartViewMode === '28') {
-                desc = "28-Day View: Displays your actual sleep duration across an exact 4-week (28-day) block, matching clean physiological adaptation cycles without arbitrary month boundary shifts.";
+                desc = "28-Day View: Displays actual sleep duration across an exact 4-week block with connected active data points.";
             }
             openInfoModal('Sleep Analytics Chart (' + (chartViewMode === '28' ? '28 Days' : chartViewMode + ' Days') + ')', desc);
         }
@@ -1350,7 +1350,7 @@
                             borderWidth: 2.5,
                             fill: false,
                             tension: 0.3,
-                            pointRadius: 2,
+                            pointRadius: 3,
                             pointBackgroundColor: 'rgba(56, 189, 248, 1)',
                             order: 1,
                             spanGaps: true
@@ -1411,8 +1411,6 @@
                 dailyMap[l.date] = (dailyMap[l.date] || 0) + l.hours;
             });
 
-            const aggregatedDays = Object.keys(dailyMap).map(date => ({ date, hours: dailyMap[date] })).sort((a, b) => new Date(a.date) - new Date(b.date));
-
             let curr = new Date(startDate);
             while (curr <= endDate) {
                 const dateStr = curr.toISOString().split('T')[0];
@@ -1422,15 +1420,9 @@
                 hoursData.push(loggedVal);
                 targetData.push(settings.target);
 
-                const currTime = new Date(dateStr + 'T00:00:00').getTime();
-                const pastDays = aggregatedDays.filter(d => {
-                    const dTime = new Date(d.date + 'T00:00:00').getTime();
-                    return dTime <= currTime && dTime >= currTime - (6 * 24 * 60 * 60 * 1000);
-                });
-
-                if (pastDays.length > 0) {
-                    const sum = pastDays.reduce((acc, curr) => acc + curr.hours, 0);
-                    trendData.push(parseFloat((sum / pastDays.length).toFixed(2)));
+                // Only plot trend points on days where the user actually entered data; otherwise null so spanGaps connects across gaps
+                if (dailyMap[dateStr] !== undefined) {
+                    trendData.push(dailyMap[dateStr]);
                 } else {
                     trendData.push(null);
                 }
