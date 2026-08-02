@@ -802,7 +802,7 @@
         function openGraphInfoModal() {
             let desc = "Visualizes actual hours slept against your target and rolling 7-day trend line.";
             if (chartViewMode === '7') {
-                desc = "7-Day View: Displays your actual sleep duration bar-by-bar across the active 7-day window. The cyan trend line calculates rolling averages exclusively on days with inputted logs.";
+                desc = "7-Day View: Displays your actual sleep duration bar-by-bar across the active 7-day window. The cyan trend line calculates rolling averages continuously across all recorded points.";
             } else if (chartViewMode === '14') {
                 desc = "14-Day View: Displays your actual sleep duration across a 2-week block. Swipe left/right or use arrows to review past fortnightly cycles.";
             } else if (chartViewMode === '28') {
@@ -1327,7 +1327,7 @@
                             pointRadius: 2,
                             pointBackgroundColor: 'rgba(56, 189, 248, 1)',
                             order: 1,
-                            spanGaps: false
+                            spanGaps: true
                         },
                         {
                             label: 'Target',
@@ -1396,19 +1396,16 @@
                 hoursData.push(loggedVal);
                 targetData.push(settings.target);
 
-                if (dailyMap[dateStr] !== undefined) {
-                    const currTime = new Date(dateStr + 'T00:00:00').getTime();
-                    const pastDays = aggregatedDays.filter(d => {
-                        const dTime = new Date(d.date + 'T00:00:00').getTime();
-                        return dTime <= currTime && dTime >= currTime - (6 * 24 * 60 * 60 * 1000);
-                    });
+                // Calculate rolling average across all plotted points and days
+                const currTime = new Date(dateStr + 'T00:00:00').getTime();
+                const pastDays = aggregatedDays.filter(d => {
+                    const dTime = new Date(d.date + 'T00:00:00').getTime();
+                    return dTime <= currTime && dTime >= currTime - (6 * 24 * 60 * 60 * 1000);
+                });
 
-                    if (pastDays.length > 0) {
-                        const sum = pastDays.reduce((acc, curr) => acc + curr.hours, 0);
-                        trendData.push(parseFloat((sum / pastDays.length).toFixed(2)));
-                    } else {
-                        trendData.push(loggedVal);
-                    }
+                if (pastDays.length > 0) {
+                    const sum = pastDays.reduce((acc, curr) => acc + curr.hours, 0);
+                    trendData.push(parseFloat((sum / pastDays.length).toFixed(2)));
                 } else {
                     trendData.push(null);
                 }
