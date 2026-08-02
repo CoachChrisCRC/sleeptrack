@@ -613,7 +613,7 @@
         <div class="glass-card rounded-3xl w-full max-w-md p-6 border border-emerald-500/30 space-y-4 max-h-[85vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-1">
                 <h3 class="text-base font-bold text-white flex items-center">
-                    <i class="fa-solid fa-seedling text-emerald-400 mr-2"></i> How to Use Circular Roots
+                    <i class="fa-solid fa-seedling text-emerald-400 mr-2"></i> How to Use
                 </h3>
                 <button onclick="closeHowToUseModal()" class="text-emerald-300 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
@@ -788,10 +788,6 @@
             initChart();
             renderApp();
             initSwipeGestures();
-
-            if (sleepLogs.length === 0 && !profile.name) {
-                setTimeout(openHowToUseModal, 500);
-            }
 
             setInterval(checkBedtimeReminder, 60000);
         });
@@ -1010,17 +1006,37 @@
             let streak = 0;
             if (sleepLogs.length > 0) {
                 const uniqueDates = [...new Set(sleepLogs.map(l => l.date))].sort((a, b) => new Date(b) - new Date(a));
-                let expectedDate = new Date();
+                
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                yesterday.setHours(0, 0, 0, 0);
+                
+                let expectedDate = yesterday;
                 
                 for (let dStr of uniqueDates) {
                     const logDate = new Date(dStr + 'T00:00:00');
+                    logDate.setHours(0, 0, 0, 0);
+                    
                     const diffTime = Math.abs(expectedDate - logDate);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    if (diffDays <= 1) {
-                        streak++;
-                        expectedDate = logDate;
+                    
+                    if (streak === 0) {
+                        const todayDate = new Date();
+                        todayDate.setHours(0, 0, 0, 0);
+                        const todayDiff = Math.ceil(Math.abs(todayDate - logDate) / (1000 * 60 * 60 * 24));
+                        if (todayDiff <= 1) {
+                            streak++;
+                            expectedDate = logDate;
+                        } else {
+                            break;
+                        }
                     } else {
-                        break;
+                        if (diffDays <= 1) {
+                            streak++;
+                            expectedDate = logDate;
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
@@ -1228,7 +1244,7 @@
             } else if (totalBalance < -0.1) {
                 const surplusVal = Math.abs(totalBalance);
                 badgeLabel.innerText = "Sleep Surplus";
-                badgeLabel.className = "text-xs font-semibold tracking-widest text-amber-300 uppercase bg-amber-950/80 px-3 py-1 rounded-full border border-emerald-500/20";
+                badgeLabel.className = "text-xs font-semibold tracking-widest text-amber-300 uppercase bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/20";
                 debtEl.innerHTML = `-${surplusVal.toFixed(1)} <span class="text-xl font-medium text-amber-400">hrs surplus</span>`;
                 subEl.innerText = `You are averaging above your target across the ${windowLabelStr}. Watch for circadian friction.`;
                 cardTitle.innerText = "Surplus & Circadian Guidance";
@@ -1266,7 +1282,6 @@
             document.getElementById('weekdaysAvgDisplay').innerText = weekdayCount > 0 ? weekdayAvg.toFixed(1) + ' hrs' : '0.0 hrs';
             document.getElementById('weekendsAvgDisplay').innerText = weekendCount > 0 ? weekendAvg.toFixed(1) + ' hrs' : '0.0 hrs';
 
-            // Dynamic Social Jetlag & Shift Friction Insight Text Generation
             const insightTextEl = document.getElementById('weekdayWeekendInsightText');
             if (aggregatedDays.length === 0) {
                 insightTextEl.innerHTML = "Log your sleep history to analyze how your weekday routines and late-finish shift days impact your weekend rhythm.";
