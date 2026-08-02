@@ -202,7 +202,7 @@
                         </h3>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button onclick="openInfoModal('Detailed Bed & Wake Log', 'Input exact bedtime and wake time for any date. The app calculates total duration automatically (handling overnight spans correctly).')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
+                        <button onclick="openInfoModal('Detailed Bed & Wake Log', 'Input exact bedtime, wake time, and your sleep latency (time to fall asleep). The app automatically subtracts sleep latency from your time-in-bed span to calculate true restorative sleep duration.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
                         <i id="detailedChevron" class="fa-solid fa-chevron-down text-emerald-300 text-xs transition-transform cursor-pointer" onclick="toggleDetailedForm()"></i>
                     </div>
                 </div>
@@ -224,9 +224,20 @@
                             <input type="time" id="detWakeTime" value="06:30" required class="glass-input w-full rounded-xl px-3 py-2 text-xs">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Sleep Quality / Notes</label>
-                            <input type="text" id="detNote" placeholder="e.g. Deep & restorative" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Time to Fall Asleep (Latency)</label>
+                            <select id="detLatency" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                <option value="0">0 mins (Instant)</option>
+                                <option value="10">10 mins (Optimal)</option>
+                                <option value="20" selected>20 mins (Normal)</option>
+                                <option value="30">30 mins (Slight friction)</option>
+                                <option value="45">45 mins (High friction)</option>
+                                <option value="60">60 mins (Racing mind)</option>
+                            </select>
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Sleep Quality / Notes</label>
+                        <input type="text" id="detNote" placeholder="e.g. Deep & restorative" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
                     </div>
                     <button type="submit" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold rounded-xl text-xs transition">
                         Save Detailed Entry
@@ -546,6 +557,14 @@
                                 These lifestyle friction modifiers stack directly onto your baseline profile when you save.
                             </p>
                             <div>
+                                <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Average Time to Fall Asleep (Latency)</label>
+                                <select id="quizLatency" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                    <option value="0">Under 15 mins (Smooth wind-down +0.0 hrs)</option>
+                                    <option value="0.25">15-30 mins (Moderate friction +0.25 hrs)</option>
+                                    <option value="0.5">30+ mins (High wind-down friction +0.5 hrs)</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Late caffeine or heavy meals before bed?</label>
                                 <select id="quizQ1" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
                                     <option value="" disabled selected>Select habit factor...</option>
@@ -575,11 +594,12 @@
                         </div>
                     </div>
 
-                    <div class="pt-2">
+                    <div class="pt-2 space-y-2">
                         <button onclick="saveProfile()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-emerald-950 flex items-center justify-center space-x-2">
                             <i class="fa-solid fa-floppy-disk"></i>
                             <span>Save Profile & Calculate Target</span>
                         </button>
+                        <p id="profileLastUpdatedLabel" class="text-[10px] text-emerald-300/60 text-center italic">Profile last updated: Never (Review every 4-6 weeks as training or stress shifts)</p>
                     </div>
                 </div>
             </section>
@@ -633,22 +653,27 @@
             <div class="space-y-3 text-xs text-emerald-100/90 leading-relaxed">
                 <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
                     <p class="font-bold text-emerald-300 flex items-center"><i class="fa-solid fa-1 mr-2 text-emerald-400"></i> Set Your Profile & Target</p>
-                    <p class="text-emerald-200/80">Go to the <strong>Profile</strong> tab, fill out your age, stress, training intensity, and sleep friction habits. Click <em>Save Profile & Calculate Target</em> to let Coach Chris algorithm determine your baseline nightly sleep requirement.</p>
+                    <p class="text-emerald-200/80">Go to the <strong>Profile</strong> tab, fill out your age, stress, training intensity, and sleep latency habits. Click <em>Save Profile & Calculate Target</em> to let Coach Chris algorithm determine your baseline nightly sleep requirement.</p>
                 </div>
 
                 <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
                     <p class="font-bold text-emerald-300 flex items-center"><i class="fa-solid fa-2 mr-2 text-emerald-400"></i> Log Your Sleep Daily</p>
-                    <p class="text-emerald-200/80">On the <strong>Track</strong> tab, use the quick slider with <em>Log Last Night</em> or <em>Log Today</em> buttons for naps and main sleep, or expand the detailed Bed/Wake Time log to input exact sleep hours.</p>
+                    <p class="text-emerald-200/80">On the <strong>Track</strong> tab, use the quick slider or expand the detailed Bed/Wake Time log—where you can input exact sleep latency in minutes to deduct wind-down delay from your time in bed.</p>
                 </div>
 
                 <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
                     <p class="font-bold text-emerald-300 flex items-center"><i class="fa-solid fa-3 mr-2 text-emerald-400"></i> Review Analytics & Trends</p>
-                    <p class="text-emerald-200/80">Check the <strong>Analytics</strong> tab to view your bar chart (with 7d, 14d, and 28-day range toggles), monthly recovery heatmap calendar, and deep-dive multi-timeframe coaching feedback.</p>
+                    <p class="text-emerald-200/80">Check the <strong>Analytics</strong> tab to view your bar chart with live target/average displays, monthly recovery heatmap calendar, and deep-dive multi-timeframe coaching feedback.</p>
                 </div>
 
                 <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
                     <p class="font-bold text-emerald-300 flex items-center"><i class="fa-solid fa-4 mr-2 text-emerald-400"></i> Tap Info Icons for Guidance</p>
                     <p class="text-emerald-200/80">Every card across the app features a subtle <i class="fa-solid fa-circle-info text-emerald-400"></i> button in the header. Tap any of them anytime to learn what the metrics mean and how to act on them!</p>
+                </div>
+
+                <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
+                    <p class="font-bold text-emerald-300 flex items-center"><i class="fa-solid fa-5 mr-2 text-emerald-400"></i> Recalculate Periodically</p>
+                    <p class="text-emerald-200/80">Life changes, and so does recovery. Circle back to update your profile stats <strong>every 4 to 6 weeks</strong>—or whenever your training volume or stress shifts significantly—so your sleep targets stay dialed in.</p>
                 </div>
             </div>
 
@@ -760,9 +785,11 @@
             gender: '', 
             stress: '', 
             training: '',
+            latencyHabit: '',
             caffeine: '',
             screens: '',
-            awakenings: ''
+            awakenings: '',
+            lastUpdated: null
         };
         let sleepLogs = JSON.parse(localStorage.getItem('cr_sleep_logs')) || [];
         let sleepChartInstance = null;
@@ -783,11 +810,13 @@
             if (profile.stress) document.getElementById('inputClientStress').value = profile.stress;
             if (profile.training) document.getElementById('inputClientTraining').value = profile.training;
 
+            if (profile.latencyHabit !== undefined && profile.latencyHabit !== '') document.getElementById('quizLatency').value = profile.latencyHabit;
             if (profile.caffeine !== undefined && profile.caffeine !== '') document.getElementById('quizQ1').value = profile.caffeine;
             if (profile.screens !== undefined && profile.screens !== '') document.getElementById('quizQ2').value = profile.screens;
             if (profile.awakenings !== undefined && profile.awakenings !== '') document.getElementById('quizQ3').value = profile.awakenings;
 
             updateProfileHeaderDisplay();
+            updateLastUpdatedLabel();
             
             if (settings.reminderActive) {
                 document.getElementById('reminderToggleBtn').innerText = 'Active';
@@ -839,25 +868,29 @@
 
         function clearProfileData(clearEverything) {
             if (clearEverything) {
-                profile = { name: '', age: '', gender: '', stress: '', training: '', caffeine: '', screens: '', awakenings: '' };
+                profile = { name: '', age: '', gender: '', stress: '', training: '', latencyHabit: '', caffeine: '', screens: '', awakenings: '', lastUpdated: null };
                 document.getElementById('inputClientName').value = '';
                 document.getElementById('inputClientAge').value = '';
                 document.getElementById('inputClientGender').selectedIndex = 0;
             } else {
                 profile.stress = '';
                 profile.training = '';
+                profile.latencyHabit = '';
                 profile.caffeine = '';
                 profile.screens = '';
                 profile.awakenings = '';
+                profile.lastUpdated = null;
             }
 
             document.getElementById('inputClientStress').selectedIndex = 0;
             document.getElementById('inputClientTraining').selectedIndex = 0;
+            document.getElementById('quizLatency').selectedIndex = 0;
             document.getElementById('quizQ1').selectedIndex = 0;
             document.getElementById('quizQ2').selectedIndex = 0;
             document.getElementById('quizQ3').selectedIndex = 0;
 
             updateProfileHeaderDisplay();
+            updateLastUpdatedLabel();
             manualSaveData();
             closeClearProfileModal();
             showToast(clearEverything ? "All profile data cleared." : "Training, stress & habits cleared.");
@@ -881,9 +914,11 @@
             profile.stress = document.getElementById('inputClientStress').value || '';
             profile.training = document.getElementById('inputClientTraining').value || '';
             
+            profile.latencyHabit = document.getElementById('quizLatency').value !== '' ? parseFloat(document.getElementById('quizLatency').value) : 0;
             profile.caffeine = document.getElementById('quizQ1').value !== '' ? parseFloat(document.getElementById('quizQ1').value) : 0;
             profile.screens = document.getElementById('quizQ2').value !== '' ? parseFloat(document.getElementById('quizQ2').value) : 0;
             profile.awakenings = document.getElementById('quizQ3').value !== '' ? parseFloat(document.getElementById('quizQ3').value) : 0;
+            profile.lastUpdated = new Date().toISOString().split('T')[0];
 
             let base = 7.5;
             const age = profile.age || 30;
@@ -897,6 +932,7 @@
             if (profile.training.includes('High Intensity')) base += 0.5;
             if (profile.training.includes('Competitive')) base += 0.75;
 
+            base += profile.latencyHabit;
             base += profile.caffeine;
             base += profile.screens;
             base += profile.awakenings;
@@ -911,6 +947,7 @@
         function saveProfile() {
             calculateUnifiedTarget();
             updateProfileHeaderDisplay();
+            updateLastUpdatedLabel();
             manualSaveData();
             renderApp();
             showToast(`Profile saved & target calculated: ${settings.target} hrs.`);
@@ -923,6 +960,15 @@
 
             document.getElementById('pNameAge').innerText = `${displayName}, ${displayAge} yrs`;
             document.getElementById('pGender').innerText = displayGender;
+        }
+
+        function updateLastUpdatedLabel() {
+            const label = document.getElementById('profileLastUpdatedLabel');
+            if (profile.lastUpdated) {
+                label.innerText = `Profile last updated: ${formatDateDisplay(profile.lastUpdated)} (Review every 4-6 weeks as training or stress shifts)`;
+            } else {
+                label.innerText = `Profile last updated: Never (Review every 4-6 weeks as training or stress shifts)`;
+            }
         }
 
         function switchScreen(screenName) {
@@ -1091,6 +1137,7 @@
             const date = document.getElementById('detDate').value;
             const bedtime = document.getElementById('detBedtime').value;
             const wakeTime = document.getElementById('detWakeTime').value;
+            const latencyMins = parseInt(document.getElementById('detLatency').value) || 0;
             const note = document.getElementById('detNote').value.trim();
 
             let [bHour, bMin] = bedtime.split(':').map(Number);
@@ -1103,12 +1150,17 @@
                 wakeMinutes += 24 * 60;
             }
             
-            let hours = parseFloat(((wakeMinutes - bedMinutes) / 60).toFixed(2));
+            let totalInBedMinutes = (wakeMinutes - bedMinutes);
+            let netSleepMinutes = totalInBedMinutes - latencyMins;
+            if (netSleepMinutes < 30) netSleepMinutes = 30; // safety floor
+
+            let hours = parseFloat((netSleepMinutes / 60).toFixed(2));
             if (hours > 24) hours = 24;
 
-            addLog(date, hours, note || `Bed: ${bedtime} - Wake: ${wakeTime}`);
+            const latencyNote = latencyMins > 0 ? ` [${latencyMins}m latency]` : '';
+            addLog(date, hours, (note ? note + latencyNote : `Bed: ${bedtime} - Wake: ${wakeTime}${latencyNote}`));
             document.getElementById('detNote').value = '';
-            showToast(`Detailed entry added: ${hours} hrs.`);
+            showToast(`Detailed entry added: ${hours} hrs (latency deducted).`);
         }
 
         function addLog(date, hours, note) {
