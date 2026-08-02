@@ -154,8 +154,8 @@
                         <i class="fa-solid fa-bolt text-emerald-400 mr-2"></i> Quick Sleep Log / Nap
                     </h3>
                     <div class="flex items-center space-x-2">
-                        <span id="quickLogDateLabel" class="text-xs font-medium text-emerald-300/80">Today</span>
-                        <button onclick="openInfoModal('Quick Sleep / Nap Logging', 'Quickly record hours slept or daytime naps for today using the slider or preset buttons. These entries automatically feed into your cumulative debt calculations.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
+                        <span id="quickLogDateLabel" class="text-xs font-medium text-emerald-300/80">Quick Entry</span>
+                        <button onclick="openInfoModal('Quick Sleep / Nap Logging', 'Quickly record hours slept for last night or today using the slider or preset buttons.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
                     </div>
                 </div>
 
@@ -180,10 +180,16 @@
                         <input type="text" id="quickLogNote" placeholder="e.g. Main sleep, Afternoon Power Nap" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
                     </div>
 
-                    <button onclick="submitQuickLog()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-plus-circle"></i>
-                        <span>Add Sleep / Nap Entry</span>
-                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="submitQuickLog('yesterday')" class="py-3 bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-md">
+                            <i class="fa-solid fa-moon text-emerald-400"></i>
+                            <span>Log Last Night</span>
+                        </button>
+                        <button onclick="submitQuickLog('today')" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-sun text-emerald-200"></i>
+                            <span>Log Today</span>
+                        </button>
+                    </div>
                 </div>
             </section>
 
@@ -620,7 +626,7 @@
 
                 <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
                     <p class="font-bold text-emerald-300 flex items-center"><i class="fa-solid fa-2 mr-2 text-emerald-400"></i> Log Your Sleep Daily</p>
-                    <p class="text-emerald-200/80">On the <strong>Track</strong> tab, use the quick slider/preset buttons for naps and main sleep, or expand the detailed Bed/Wake Time log to input exact sleep hours. Your cumulative sleep debt or surplus updates instantly.</p>
+                    <p class="text-emerald-200/80">On the <strong>Track</strong> tab, use the quick slider with <em>Log Last Night</em> or <em>Log Today</em> buttons for naps and main sleep, or expand the detailed Bed/Wake Time log to input exact sleep hours.</p>
                 </div>
 
                 <div class="bg-emerald-950/40 p-3 rounded-2xl border border-emerald-500/10 space-y-1">
@@ -1030,14 +1036,19 @@
             onSliderChange(hrs);
         }
 
-        function submitQuickLog() {
+        function submitQuickLog(targetDay) {
             const hours = parseFloat(document.getElementById('quickHoursSlider').value);
-            const note = document.getElementById('quickLogNote').value.trim() || 'Quick log / Nap';
-            const todayStr = new Date().toISOString().split('T')[0];
+            const note = document.getElementById('quickLogNote').value.trim() || (targetDay === 'yesterday' ? 'Main sleep (Last Night)' : 'Quick log / Nap');
             
-            addLog(todayStr, hours, note);
+            const targetDate = new Date();
+            if (targetDay === 'yesterday') {
+                targetDate.setDate(targetDate.getDate() - 1);
+            }
+            const dateStr = targetDate.toISOString().split('T')[0];
+            
+            addLog(dateStr, hours, note);
             document.getElementById('quickLogNote').value = '';
-            showToast(`Logged ${hours} hrs (${note}).`);
+            showToast(`Logged ${hours} hrs for ${targetDay === 'yesterday' ? 'Last Night' : 'Today'} (${note}).`);
         }
 
         function toggleDetailedForm() {
@@ -1396,7 +1407,6 @@
                 hoursData.push(loggedVal);
                 targetData.push(settings.target);
 
-                // Calculate rolling average across all plotted points and days
                 const currTime = new Date(dateStr + 'T00:00:00').getTime();
                 const pastDays = aggregatedDays.filter(d => {
                     const dTime = new Date(d.date + 'T00:00:00').getTime();
