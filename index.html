@@ -290,6 +290,18 @@
                     </div>
                 </div>
 
+                <!-- Window Target & Average Summary Display -->
+                <div class="grid grid-cols-2 gap-2 my-2 pt-1 pb-2 text-[11px] text-emerald-200/90 font-medium text-center">
+                    <div class="bg-emerald-950/40 py-2 px-2 rounded-2xl border border-emerald-500/10">
+                        <span class="text-[9px] text-emerald-400/70 uppercase block">Window Target</span>
+                        <span id="chartTargetStat" class="text-sm font-bold text-white">8.0 hrs</span>
+                    </div>
+                    <div class="bg-emerald-950/40 py-2 px-2 rounded-2xl border border-emerald-500/10">
+                        <span class="text-[9px] text-emerald-400/70 uppercase block">Window Average</span>
+                        <span id="chartAvgStat" class="text-sm font-bold text-emerald-400">0.0 hrs</span>
+                    </div>
+                </div>
+
                 <div class="relative h-48 w-full mt-2">
                     <canvas id="sleepChart"></canvas>
                 </div>
@@ -1307,7 +1319,7 @@
                         <div>
                             <div class="font-semibold text-white flex items-center space-x-2">
                                 <span>${formatDateDisplay(log.date)}</span>
-                                <span class="px-2 py-0.5 rounded-md ${log.hours >= settings.target ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-300 border border-rose-500/20'}">${log.hours} hrs</span>
+                                <span class="px-2 py-0.5 rounded-md ${log.hours >= settings.target ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-300 border border-emerald-500/20'}">${log.hours} hrs</span>
                             </div>
                             ${log.note ? `<p class="text-emerald-200/60 mt-1 italic">${escapeHtml(log.note)}</p>` : ''}
                         </div>
@@ -1412,6 +1424,9 @@
             });
 
             let curr = new Date(startDate);
+            let activeSum = 0;
+            let activeCount = 0;
+
             while (curr <= endDate) {
                 const dateStr = curr.toISOString().split('T')[0];
                 dates.push(formatShortDate(dateStr));
@@ -1420,15 +1435,21 @@
                 hoursData.push(loggedVal);
                 targetData.push(settings.target);
 
-                // Only plot trend points on days where the user actually entered data; otherwise null so spanGaps connects across gaps
                 if (dailyMap[dateStr] !== undefined) {
                     trendData.push(dailyMap[dateStr]);
+                    activeSum += dailyMap[dateStr];
+                    activeCount++;
                 } else {
                     trendData.push(null);
                 }
 
                 curr.setDate(curr.getDate() + 1);
             }
+
+            const windowAvg = activeCount > 0 ? (activeSum / activeCount) : 0;
+
+            document.getElementById('chartTargetStat').innerText = settings.target.toFixed(1) + ' hrs';
+            document.getElementById('chartAvgStat').innerText = windowAvg.toFixed(1) + ' hrs';
 
             const rangeLabel = `${formatShortDate(startDate.toISOString().split('T')[0])} - ${formatShortDate(endDate.toISOString().split('T')[0])}`;
             document.getElementById('chartRangeLabel').innerText = rangeLabel;
