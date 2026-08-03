@@ -1,4 +1,4 @@
-```html TEST
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +93,20 @@
 
     <!-- Main App Container -->
     <main class="w-full max-w-md px-4 space-y-4 mt-3">
+
+        <!-- Temporary Contextual Greeting Popup Banner -->
+        <div id="greetingPopup" class="glass-card rounded-2xl p-4 border border-emerald-500/30 bg-gradient-to-r from-emerald-950/80 to-emerald-900/40 relative shadow-lg transition-all duration-300 flex items-start space-x-3">
+            <div id="greetingIconContainer" class="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0 text-sm mt-0.5">
+                <i id="greetingIcon" class="fa-solid fa-sun"></i>
+            </div>
+            <div class="flex-1 pr-4">
+                <h4 id="greetingTitle" class="text-xs font-bold uppercase tracking-wider text-emerald-300">Good morning</h4>
+                <p id="greetingSubtitle" class="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">Let's set the tone for the day and check your recovery baseline.</p>
+            </div>
+            <button onclick="dismissGreeting()" class="absolute top-3 right-3 text-emerald-400/70 hover:text-white transition text-xs p-1" title="Dismiss">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
         <!-- SCREEN 1: DASHBOARD / TRACK -->
         <div id="screenDashboard" class="space-y-4">
@@ -830,6 +844,7 @@
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('detDate').value = todayStr;
 
+            initDynamicGreeting();
             initChart();
             renderApp();
             initSwipeGestures();
@@ -837,6 +852,40 @@
             // Active interval checking every 10 seconds for precise notification matching
             setInterval(checkBedtimeReminder, 10000);
         });
+
+        function initDynamicGreeting() {
+            const hour = new Date().getHours();
+            const titleEl = document.getElementById('greetingTitle');
+            const subEl = document.getElementById('greetingSubtitle');
+            const iconEl = document.getElementById('greetingIcon');
+
+            if (hour >= 5 && hour < 12) {
+                titleEl.innerText = "Good morning";
+                subEl.innerText = "Let's set the tone for the day and check your recovery baseline.";
+                iconEl.className = "fa-solid fa-sun";
+            } else if (hour >= 12 && hour < 17) {
+                titleEl.innerText = "Afternoon check-in";
+                subEl.innerText = "How's your energy holding up today?";
+                iconEl.className = "fa-solid fa-cloud-sun";
+            } else if (hour >= 17 && hour < 21) {
+                titleEl.innerText = "Evening transition";
+                subEl.innerText = "Time to wind down and lock in your recovery.";
+                iconEl.className = "fa-solid fa-moon";
+            } else {
+                titleEl.innerText = "Late night recovery";
+                subEl.innerText = "Easy on the screens—protect that sleep window.";
+                iconEl.className = "fa-solid fa-bed";
+            }
+        }
+
+        function dismissGreeting() {
+            const popup = document.getElementById('greetingPopup');
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                popup.classList.add('hidden');
+            }, 300);
+        }
 
         function openHowToUseModal() { document.getElementById('howToUseModal').classList.remove('hidden'); }
         function closeHowToUseModal() { document.getElementById('howToUseModal').classList.add('hidden'); }
@@ -1657,7 +1706,6 @@
                 lastFiredReminderDate = `${currentDate}_${currentTime}`;
                 showToast("🌙 Wind-down Reminder: Time to prepare for restorative sleep!");
                 
-                // Optional browser notification if permitted
                 if (window.Notification && Notification.permission === "granted") {
                     new Notification("Circular Roots Sleep Coach", { body: "Time to wind down and protect your recovery target!" });
                 } else if (window.Notification && Notification.permission !== "denied") {
@@ -1678,7 +1726,7 @@
                 settings.windowDays = w;
                 settings.reminderTime = r;
                 document.getElementById('debtWindowSelect').value = w;
-                closeSettings();
+                closeSettings();     
                 manualSaveData();
                 renderApp();
                 showToast("Settings updated successfully.");
