@@ -169,14 +169,14 @@
                     </h3>
                     <div class="flex items-center space-x-2">
                         <span id="quickLogDateLabel" class="text-xs font-medium text-emerald-300/80">Quick Entry</span>
-                        <button onclick="openInfoModal('Quick Sleep / Nap Logging', 'Quickly record hours slept for last night or today using the slider or preset buttons.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
+                        <button onclick="openInfoModal('Quick Sleep / Nap Logging', 'Quickly record hours in bed and factor in sleep latency to log your net restorative rest.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div>
                         <div class="flex justify-between text-xs text-emerald-200/70 mb-1">
-                            <span>Hours Slept / Nap Duration</span>
+                            <span>Total Time in Bed</span>
                             <span id="sliderValueDisplay" class="font-bold text-emerald-400 text-sm">7.5 hrs</span>
                         </div>
                         <input type="range" id="quickHoursSlider" min="0.5" max="14" step="0.5" value="7.5" oninput="onSliderChange(this.value)" class="w-full h-2 bg-emerald-950 rounded-lg appearance-none cursor-pointer">
@@ -189,9 +189,22 @@
                         <button onclick="setQuickHours(8.5)" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 rounded-xl text-xs font-semibold text-emerald-300 transition">8.5 hrs</button>
                     </div>
 
-                    <div>
-                        <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Session Label / Note (optional)</label>
-                        <input type="text" id="quickLogNote" placeholder="e.g. Main sleep, Afternoon Power Nap" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Time to Fall Asleep (Latency)</label>
+                            <select id="quickLatencySelect" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                <option value="0">0 mins (Instant)</option>
+                                <option value="10">10 mins (Optimal)</option>
+                                <option value="20" selected>20 mins (Normal)</option>
+                                <option value="30">30 mins (Slight friction)</option>
+                                <option value="45">45 mins (High friction)</option>
+                                <option value="60">60 mins (Racing mind)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Session Note (optional)</label>
+                            <input type="text" id="quickLogNote" placeholder="e.g. Main sleep, Power nap" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -874,11 +887,11 @@
 
             if (isDaytime) {
                 titleEl.innerText = "Good morning";
-                subEl.innerText = `Let's set the tone for the day. Don't forget to log your rest and recovery metrics from last night.`;
+                subEl.innerText = `Let's set the tone for the day. Remember to log your rest and recovery metrics! Tip: ${randomTip}`;
                 iconEl.className = "fa-solid fa-sun";
             } else {
                 titleEl.innerText = "Good evening";
-                subEl.innerText = `Time to wind down and lock in your recovery. Tip: ${randomTip}`;
+                subEl.innerText = `Time to wind down and lock in your recovery. Don't forget to log today's rest! Tip: ${randomTip}`;
                 iconEl.className = "fa-solid fa-moon";
             }
         }
@@ -1170,8 +1183,18 @@
         }
 
         function submitQuickLog(targetDay) {
-            const hours = parseFloat(document.getElementById('quickHoursSlider').value);
-            const note = document.getElementById('quickLogNote').value.trim() || (targetDay === 'yesterday' ? 'Main sleep (Last Night)' : 'Quick log / Nap');
+            const timeInBed = parseFloat(document.getElementById('quickHoursSlider').value);
+            const latencyMins = parseFloat(document.getElementById('quickLatencySelect').value) || 0;
+            
+            // Deduct latency hours from time in bed to calculate net restorative sleep
+            let netHours = timeInBed - (latencyMins / 60);
+            if (netHours < 0.5) netHours = 0.5;
+            netHours = parseFloat(netHours.toFixed(2));
+
+            const noteInput = document.getElementById('quickLogNote').value.trim();
+            const latencyNote = latencyMins > 0 ? ` [${latencyMins}m latency]` : '';
+            const defaultNote = targetDay === 'yesterday' ? 'Main sleep (Last Night)' : 'Quick log / Nap';
+            const note = (noteInput ? noteInput + latencyNote : defaultNote + latencyNote);
             
             const targetDate = new Date();
             if (targetDay === 'yesterday') {
@@ -1179,9 +1202,9 @@
             }
             const dateStr = targetDate.toISOString().split('T')[0];
             
-            addLog(dateStr, hours, note);
+            addLog(dateStr, netHours, note);
             document.getElementById('quickLogNote').value = '';
-            showToast(`Logged ${hours} hrs for ${targetDay === 'yesterday' ? 'Last Night' : 'Today'} (${note}).`);
+            showToast(`Logged ${netHours} hrs net sleep for ${targetDay === 'yesterday' ? 'Last Night' : 'Today'}.`);
         }
 
         function toggleDetailedForm() {
@@ -1790,7 +1813,7 @@
         function formatDateDisplay(dStr) {
             return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         }
-        formatShortDate = function(dStr) {
+        function formatShortDate(dStr) {
             return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         }
         function escapeHtml(str) {
