@@ -715,7 +715,7 @@
             </p>
             
             <div class="space-y-2.5 pt-2">
-                <button onclick="clearProfileData(false)" class="w-full py-3 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-2">
+                <button onclick="clearProfileData(false)" class="w-full py-3 bg-emerald-950/80 hover:bg-rose-900 border border-emerald-500/30 text-emerald-300 font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-2">
                     <i class="fa-solid fa-sliders text-emerald-400"></i>
                     <span>Clear Training, Stress & Habits Only</span>
                 </button>
@@ -758,9 +758,12 @@
                     </div>
                 </div>
 
-                <div class="pt-2 flex space-x-2">
-                    <button onclick="saveSettings()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Save Settings</button>
-                    <button onclick="resetData()" class="px-4 py-2.5 bg-rose-950/60 border border-rose-500/30 text-rose-300 hover:bg-rose-900/60 font-semibold rounded-xl text-xs transition">Reset</button>
+                <div class="pt-2 space-y-2">
+                    <button onclick="saveSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition">Save Settings</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="resetSettingsOnly()" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 text-emerald-300 font-semibold rounded-xl text-[11px] transition">Reset Settings</button>
+                        <button onclick="clearAllData()" class="py-2 bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 font-semibold rounded-xl text-[11px] transition">Clear All Data</button>
+                    </div>
                 </div>
             </div>
 
@@ -1371,7 +1374,7 @@
                         <div>
                             <div class="font-semibold text-white flex items-center space-x-2">
                                 <span>${formatDateDisplay(log.date)}</span>
-                                <span class="px-2 py-0.5 rounded-md ${log.hours >= settings.target ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-300 border border-emerald-500/20'}">${log.hours} hrs</span>
+                                <span class="px-2 py-0.5 rounded-md ${log.hours >= settings.target ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/20' : 'bg-rose-950/60 text-rose-300 border border-rose-500/20'}">${log.hours} hrs</span>
                             </div>
                             ${log.note ? `<p class="text-emerald-200/60 mt-1 italic">${escapeHtml(log.note)}</p>` : ''}
                         </div>
@@ -1670,13 +1673,52 @@
             }
         }
 
-        function resetData() {
-            if (confirm("Are you sure you want to clear all sleep history?")) {
+        function resetSettingsOnly() {
+            if (confirm("Reset settings back to blank/default preferences? (Your logs and profile remain untouched)")) {
+                settings = { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+                document.getElementById('settingTarget').value = settings.target;
+                document.getElementById('settingWindow').value = settings.windowDays;
+                document.getElementById('settingReminderTime').value = settings.reminderTime;
+                document.getElementById('debtWindowSelect').value = settings.windowDays;
+                document.getElementById('reminderToggleBtn').innerText = 'Enable';
+                document.getElementById('reminderToggleBtn').classList.remove('bg-emerald-600', 'text-white');
+                
+                localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
+                renderApp();
+                closeSettings();
+                showToast("Settings reset to defaults.");
+            }
+        }
+
+        function clearAllData() {
+            if (confirm("Warning: Full 'Clear All Data' will wipe all sleep logs, profile data, and settings, resetting the entire app back to its pristine base state. Proceed?")) {
+                localStorage.clear();
                 sleepLogs = [];
-                localStorage.removeItem('cr_sleep_logs');
+                settings = { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+                profile = { name: '', age: '', gender: '', stress: '', training: '', latencyHabit: '', caffeine: '', screens: '', awakenings: '', lastUpdated: null };
+                
+                document.getElementById('settingTarget').value = settings.target;
+                document.getElementById('settingWindow').value = settings.windowDays;
+                document.getElementById('settingReminderTime').value = settings.reminderTime;
+                document.getElementById('debtWindowSelect').value = settings.windowDays;
+                document.getElementById('reminderToggleBtn').innerText = 'Enable';
+                document.getElementById('reminderToggleBtn').classList.remove('bg-emerald-600', 'text-white');
+                
+                document.getElementById('inputClientName').value = '';
+                document.getElementById('inputClientAge').value = '';
+                document.getElementById('inputClientGender').selectedIndex = 0;
+                document.getElementById('inputClientStress').selectedIndex = 0;
+                document.getElementById('inputClientTraining').selectedIndex = 0;
+                document.getElementById('quizLatency').selectedIndex = 0;
+                document.getElementById('quizQ1').selectedIndex = 0;
+                document.getElementById('quizQ2').selectedIndex = 0;
+                document.getElementById('quizQ3').selectedIndex = 0;
+
+                updateProfileHeaderDisplay();
+                updateLastUpdatedLabel();
                 closeSettings();
                 renderApp();
-                showToast("Data reset.");
+                showToast("App completely reset to base state.");
             }
         }
 
