@@ -94,14 +94,14 @@
     <!-- Main App Container -->
     <main class="w-full max-w-md px-4 space-y-4 mt-3">
 
-        <!-- Temporary Contextual Greeting Popup Banner -->
+        <!-- Contextual Greeting Banner (Inline Card) -->
         <div id="greetingPopup" class="glass-card rounded-2xl p-4 border border-emerald-500/30 bg-gradient-to-r from-emerald-950/80 to-emerald-900/40 relative shadow-lg transition-all duration-300 flex items-start space-x-3">
             <div id="greetingIconContainer" class="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0 text-sm mt-0.5">
                 <i id="greetingIcon" class="fa-solid fa-sun"></i>
             </div>
             <div class="flex-1 pr-4">
                 <h4 id="greetingTitle" class="text-xs font-bold uppercase tracking-wider text-emerald-300">Good morning</h4>
-                <p id="greetingSubtitle" class="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">Let's set the tone for the day and check your recovery baseline.</p>
+                <p id="greetingSubtitle" class="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">Let's set the tone for the day. Don't forget to log your rest and recovery metrics from last night.</p>
             </div>
             <button onclick="dismissGreeting()" class="absolute top-3 right-3 text-emerald-400/70 hover:text-white transition text-xs p-1" title="Dismiss">
                 <i class="fa-solid fa-xmark"></i>
@@ -504,7 +504,7 @@
                         <i class="fa-solid fa-id-card text-emerald-400 mr-2"></i> Client Information
                     </h3>
                     <div class="flex items-center space-x-2">
-                        <button onclick="openInfoModal('Client Profile & Biometrics', 'Your age, stress load, training intensity, and sleep friction habits are dynamically synthesized by Coach Chris algorithm to calculate your optimal nightly sleep target.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
+                        <button onclick="openInfoModal('Client Profile & Biometrics', 'Your age, stress load, training intensity, and sleep latency habits are dynamically synthesized by Coach Chris algorithm to calculate your optimal nightly sleep target.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
                         <button onclick="openClearProfileModal()" class="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 rounded-lg text-[10px] font-semibold flex items-center space-x-1 transition">
                             <i class="fa-solid fa-trash-can text-[9px]"></i>
                             <span>Clear</span>
@@ -816,6 +816,14 @@
         let heatmapMonthOffset = 0;
         let lastFiredReminderDate = ''; // prevents multiple triggers in the same minute
 
+        const scientificallyAccurateSleepTips = [
+            "Keep your bedroom cool (around 18°C / 65°F) to facilitate the natural drop in core body temperature required for deep sleep.",
+            "Get 10-15 minutes of direct natural sunlight within an hour of waking to anchor your circadian rhythm and boost daytime alertness.",
+            "Avoid heavy meals and caffeine within 3 to 4 hours of your target sleep window to prevent elevated heart rate and fragmented sleep architecture.",
+            "Dim overhead lights and limit blue spectrum screen exposure 60 minutes before bed to allow natural melatonin production.",
+            "Maintain a consistent wake-up time 7 days a week to anchor your internal biological clock and minimize social jetlag."
+        ];
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('settingTarget').value = settings.target;
             document.getElementById('settingWindow').value = settings.windowDays;
@@ -844,7 +852,7 @@
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('detDate').value = todayStr;
 
-            initDynamicGreeting();
+            initSimpleGreeting();
             initChart();
             renderApp();
             initSwipeGestures();
@@ -853,28 +861,25 @@
             setInterval(checkBedtimeReminder, 10000);
         });
 
-        function initDynamicGreeting() {
+        function initSimpleGreeting() {
             const hour = new Date().getHours();
             const titleEl = document.getElementById('greetingTitle');
             const subEl = document.getElementById('greetingSubtitle');
             const iconEl = document.getElementById('greetingIcon');
 
-            if (hour >= 5 && hour < 12) {
+            // Daytime: 5:00 AM to 5:59 PM (5 to 17)
+            // Evening: 6:00 PM to 4:59 AM (18 to 4)
+            const isDaytime = hour >= 5 && hour < 18;
+            const randomTip = scientificallyAccurateSleepTips[Math.floor(Math.random() * scientificallyAccurateSleepTips.length)];
+
+            if (isDaytime) {
                 titleEl.innerText = "Good morning";
-                subEl.innerText = "Let's set the tone for the day and check your recovery baseline.";
+                subEl.innerText = `Let's set the tone for the day. Don't forget to log your rest and recovery metrics from last night.`;
                 iconEl.className = "fa-solid fa-sun";
-            } else if (hour >= 12 && hour < 17) {
-                titleEl.innerText = "Afternoon check-in";
-                subEl.innerText = "How's your energy holding up today?";
-                iconEl.className = "fa-solid fa-cloud-sun";
-            } else if (hour >= 17 && hour < 21) {
-                titleEl.innerText = "Evening transition";
-                subEl.innerText = "Time to wind down and lock in your recovery.";
-                iconEl.className = "fa-solid fa-moon";
             } else {
-                titleEl.innerText = "Late night recovery";
-                subEl.innerText = "Easy on the screens—protect that sleep window.";
-                iconEl.className = "fa-solid fa-bed";
+                titleEl.innerText = "Good evening";
+                subEl.innerText = `Time to wind down and lock in your recovery. Tip: ${randomTip}`;
+                iconEl.className = "fa-solid fa-moon";
             }
         }
 
@@ -1785,7 +1790,7 @@
         function formatDateDisplay(dStr) {
             return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         }
-        function formatShortDate(dStr) {
+        formatShortDate = function(dStr) {
             return new Date(dStr + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         }
         function escapeHtml(str) {
