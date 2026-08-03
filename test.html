@@ -1,4 +1,4 @@
-```html
+```html TEST
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -800,6 +800,7 @@
         let chartOffset = 0;
         let chartViewMode = '7'; // '7', '14', '28'
         let heatmapMonthOffset = 0;
+        let lastFiredReminderDate = ''; // prevents multiple triggers in the same minute
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('settingTarget').value = settings.target;
@@ -833,7 +834,8 @@
             renderApp();
             initSwipeGestures();
 
-            setInterval(checkBedtimeReminder, 60000);
+            // Active interval checking every 10 seconds for precise notification matching
+            setInterval(checkBedtimeReminder, 10000);
         });
 
         function openHowToUseModal() { document.getElementById('howToUseModal').classList.remove('hidden'); }
@@ -1636,7 +1638,7 @@
             if (settings.reminderActive) {
                 btn.innerText = 'Active';
                 btn.classList.add('bg-emerald-600', 'text-white');
-                showToast("Bedtime reminder activated.");
+                showToast("Bedtime reminder activated for " + settings.reminderTime);
             } else {
                 btn.innerText = 'Enable';
                 btn.classList.remove('bg-emerald-600', 'text-white');
@@ -1649,8 +1651,18 @@
             if (!settings.reminderActive) return;
             const now = new Date();
             const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-            if (currentTime === settings.reminderTime) {
-                showToast("Wind down reminder: Prepare for restful sleep tonight.");
+            const currentDate = now.toISOString().split('T')[0];
+
+            if (currentTime === settings.reminderTime && lastFiredReminderDate !== `${currentDate}_${currentTime}`) {
+                lastFiredReminderDate = `${currentDate}_${currentTime}`;
+                showToast("🌙 Wind-down Reminder: Time to prepare for restorative sleep!");
+                
+                // Optional browser notification if permitted
+                if (window.Notification && Notification.permission === "granted") {
+                    new Notification("Circular Roots Sleep Coach", { body: "Time to wind down and protect your recovery target!" });
+                } else if (window.Notification && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
             }
         }
 
