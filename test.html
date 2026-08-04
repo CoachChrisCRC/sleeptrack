@@ -756,7 +756,7 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Settings Modal (Cleaned up: Reminders removed) -->
     <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="glass-card rounded-3xl w-full max-w-sm p-6 border border-emerald-500/30 space-y-4">
             <div class="flex items-center justify-between mb-2">
@@ -778,13 +778,6 @@
                         <option value="14" selected>14 Days</option>
                         <option value="28">28 Days</option>
                     </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-emerald-200/70 mb-1">Bedtime Reminder (Nudge)</label>
-                    <div class="flex space-x-2">
-                        <input type="time" id="settingReminderTime" value="22:00" class="glass-input flex-1 rounded-xl px-3 py-2 text-xs">
-                        <button onclick="toggleBedtimeReminder()" id="reminderToggleBtn" class="px-4 py-2 bg-emerald-950 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs font-semibold">Enable</button>
-                    </div>
                 </div>
 
                 <div class="pt-2 space-y-2">
@@ -810,7 +803,7 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        let settings = JSON.parse(localStorage.getItem('cr_sleep_settings')) || { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+        let settings = JSON.parse(localStorage.getItem('cr_sleep_settings')) || { target: 8.0, windowDays: '14' };
         let profile = JSON.parse(localStorage.getItem('cr_sleep_profile')) || { 
             name: '', 
             age: '', 
@@ -829,7 +822,6 @@
         let chartOffset = 0;
         let chartViewMode = '7'; // '7', '14', '28'
         let heatmapMonthOffset = 0;
-        let lastFiredReminderDate = ''; // prevents multiple triggers in the same minute
 
         const scientificallyAccurateSleepTips = [
             "Keep your bedroom cool (around 18°C / 65°F) to facilitate the natural drop in core body temperature required for deep sleep.",
@@ -842,7 +834,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('settingTarget').value = settings.target;
             document.getElementById('settingWindow').value = settings.windowDays;
-            document.getElementById('settingReminderTime').value = settings.reminderTime;
             document.getElementById('debtWindowSelect').value = settings.windowDays;
 
             document.getElementById('inputClientName').value = profile.name || '';
@@ -858,11 +849,6 @@
 
             updateProfileHeaderDisplay();
             updateLastUpdatedLabel();
-            
-            if (settings.reminderActive) {
-                document.getElementById('reminderToggleBtn').innerText = 'Active';
-                document.getElementById('reminderToggleBtn').classList.add('bg-emerald-600', 'text-white');
-            }
 
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('detDate').value = todayStr;
@@ -871,9 +857,6 @@
             initChart();
             renderApp();
             initSwipeGestures();
-
-            // Active interval checking every 10 seconds for precise notification matching
-            setInterval(checkBedtimeReminder, 10000);
         });
 
         function initSimpleGreeting() {
@@ -1712,50 +1695,15 @@
             reader.readAsText(file);
         }
 
-        function toggleBedtimeReminder() {
-            settings.reminderActive = !settings.reminderActive;
-            const btn = document.getElementById('reminderToggleBtn');
-            if (settings.reminderActive) {
-                btn.innerText = 'Active';
-                btn.classList.add('bg-emerald-600', 'text-white');
-                showToast("Bedtime reminder activated for " + settings.reminderTime);
-            } else {
-                btn.innerText = 'Enable';
-                btn.classList.remove('bg-emerald-600', 'text-white');
-                showToast("Bedtime reminder disabled.");
-            }
-            manualSaveData();
-        }
-
-        function checkBedtimeReminder() {
-            if (!settings.reminderActive) return;
-            const now = new Date();
-            const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-            const currentDate = now.toISOString().split('T')[0];
-
-            if (currentTime === settings.reminderTime && lastFiredReminderDate !== `${currentDate}_${currentTime}`) {
-                lastFiredReminderDate = `${currentDate}_${currentTime}`;
-                showToast("🌙 Wind-down Reminder: Time to prepare for restorative sleep!");
-                
-                if (window.Notification && Notification.permission === "granted") {
-                    new Notification("Circular Roots Sleep Coach", { body: "Time to wind down and protect your recovery target!" });
-                } else if (window.Notification && Notification.permission !== "denied") {
-                    Notification.requestPermission();
-                }
-            }
-        }
-
         function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
         
         function saveSettings() {
             const t = parseFloat(document.getElementById('settingTarget').value);
             const w = document.getElementById('settingWindow').value;
-            const r = document.getElementById('settingReminderTime').value;
             if (t > 0) {
                 settings.target = t;
                 settings.windowDays = w;
-                settings.reminderTime = r;
                 document.getElementById('debtWindowSelect').value = w;
                 closeSettings();     
                 manualSaveData();
@@ -1766,13 +1714,10 @@
 
         function resetSettingsOnly() {
             if (confirm("Reset settings back to blank/default preferences? (Your logs and profile remain untouched)")) {
-                settings = { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+                settings = { target: 8.0, windowDays: '14' };
                 document.getElementById('settingTarget').value = settings.target;
                 document.getElementById('settingWindow').value = settings.windowDays;
-                document.getElementById('settingReminderTime').value = settings.reminderTime;
                 document.getElementById('debtWindowSelect').value = settings.windowDays;
-                document.getElementById('reminderToggleBtn').innerText = 'Enable';
-                document.getElementById('reminderToggleBtn').classList.remove('bg-emerald-600', 'text-white');
                 
                 localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
                 renderApp();
@@ -1785,15 +1730,12 @@
             if (confirm("Warning: Full 'Clear All Data' will wipe all sleep logs, profile data, and settings, resetting the entire app back to its pristine base state. Proceed?")) {
                 localStorage.clear();
                 sleepLogs = [];
-                settings = { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+                settings = { target: 8.0, windowDays: '14' };
                 profile = { name: '', age: '', gender: '', stress: '', training: '', latencyHabit: '', caffeine: '', screens: '', awakenings: '', lastUpdated: null };
                 
                 document.getElementById('settingTarget').value = settings.target;
                 document.getElementById('settingWindow').value = settings.windowDays;
-                document.getElementById('settingReminderTime').value = settings.reminderTime;
                 document.getElementById('debtWindowSelect').value = settings.windowDays;
-                document.getElementById('reminderToggleBtn').innerText = 'Enable';
-                document.getElementById('reminderToggleBtn').classList.remove('bg-emerald-600', 'text-white');
                 
                 document.getElementById('inputClientName').value = '';
                 document.getElementById('inputClientAge').value = '';
