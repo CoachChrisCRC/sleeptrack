@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -193,6 +192,7 @@
                         <div>
                             <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Time to Fall Asleep (Latency)</label>
                             <select id="quickLatencySelect" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                <option value="">-- Select latency --</option>
                                 <option value="0">0 mins (Instant)</option>
                                 <option value="10">10 mins (Optimal)</option>
                                 <option value="20" selected>20 mins (Normal)</option>
@@ -253,6 +253,7 @@
                         <div>
                             <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Time to Fall Asleep (Latency)</label>
                             <select id="detLatency" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                <option value="">-- Select latency --</option>
                                 <option value="0">0 mins (Instant)</option>
                                 <option value="10">10 mins (Optimal)</option>
                                 <option value="20" selected>20 mins (Normal)</option>
@@ -539,7 +540,7 @@
                         <div>
                             <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Gender</label>
                             <select id="inputClientGender" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                <option value="" disabled selected>Select gender...</option>
+                                <option value="">-- Unselected --</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Non-binary">Non-binary</option>
@@ -551,7 +552,7 @@
                     <div>
                         <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Lifestyle / Stress</label>
                         <select id="inputClientStress" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                            <option value="" disabled selected>Select stress level...</option>
+                            <option value="">-- Unselected --</option>
                             <option value="Low Stress / Relaxed">Low Stress / Relaxed</option>
                             <option value="Moderate Stress (Standard Work/Life)">Moderate Stress (Standard Work/Life)</option>
                             <option value="High Stress (Demanding Job / Shift Work)">High Stress (Demanding Job / Shift Work)</option>
@@ -562,7 +563,7 @@
                     <div>
                         <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Training Intensity</label>
                         <select id="inputClientTraining" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                            <option value="" disabled selected>Select training intensity...</option>
+                            <option value="">-- Unselected --</option>
                             <option value="Recovery / Mobility Focus">Recovery / Mobility Focus</option>
                             <option value="Moderate Functional Fitness (3-4x/wk)">Moderate Functional Fitness (3-4x/wk)</option>
                             <option value="High Intensity Strength & Conditioning">High Intensity Strength & Conditioning</option>
@@ -586,6 +587,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Average Time to Fall Asleep (Latency)</label>
                                 <select id="quizLatency" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">Under 15 mins (Smooth wind-down +0.0 hrs)</option>
                                     <option value="0.25">15-30 mins (Moderate friction +0.25 hrs)</option>
                                     <option value="0.5">30+ mins (High wind-down friction +0.5 hrs)</option>
@@ -594,7 +596,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Late caffeine or heavy meals before bed?</label>
                                 <select id="quizQ1" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                    <option value="" disabled selected>Select habit factor...</option>
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">More than 4 hours before bed (+0.0 hrs)</option>
                                     <option value="0.25">2-4 hours before bed (+0.25 hrs)</option>
                                     <option value="0.5">Within 2 hours of sleep (+0.5 hrs)</option>
@@ -603,7 +605,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Screen time or device use before sleep?</label>
                                 <select id="quizQ2" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                    <option value="" disabled selected>Select habit factor...</option>
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">Disconnect > 1 hour prior</option>
                                     <option value="0.25">Screens right up until bedtime</option>
                                     <option value="0.5">Frequently wake up looking at phone</option>
@@ -612,7 +614,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Nighttime awakenings / sleep continuity?</label>
                                 <select id="quizQ3" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                    <option value="" disabled selected>Select habit factor...</option>
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">Sleep straight through</option>
                                     <option value="0.5">Wake up 1-2 times per night</option>
                                     <option value="1.0">Frequent disruptions / poor continuity</option>
@@ -943,7 +945,7 @@
                 profile = { name: '', age: '', gender: '', stress: '', training: '', latencyHabit: '', caffeine: '', screens: '', awakenings: '', lastUpdated: null };
                 document.getElementById('inputClientName').value = '';
                 document.getElementById('inputClientAge').value = '';
-                document.getElementById('inputClientGender').selectedIndex = 0;
+                document.getElementById('inputClientGender').value = '';
             } else {
                 profile.stress = '';
                 profile.training = '';
@@ -954,12 +956,12 @@
                 profile.lastUpdated = null;
             }
 
-            document.getElementById('inputClientStress').selectedIndex = 0;
-            document.getElementById('inputClientTraining').selectedIndex = 0;
-            document.getElementById('quizLatency').selectedIndex = 0;
-            document.getElementById('quizQ1').selectedIndex = 0;
-            document.getElementById('quizQ2').selectedIndex = 0;
-            document.getElementById('quizQ3').selectedIndex = 0;
+            document.getElementById('inputClientStress').value = '';
+            document.getElementById('inputClientTraining').value = '';
+            document.getElementById('quizLatency').value = '';
+            document.getElementById('quizQ1').value = '';
+            document.getElementById('quizQ2').value = '';
+            document.getElementById('quizQ3').value = '';
 
             updateProfileHeaderDisplay();
             updateLastUpdatedLabel();
@@ -1184,9 +1186,9 @@
 
         function submitQuickLog(targetDay) {
             const timeInBed = parseFloat(document.getElementById('quickHoursSlider').value);
-            const latencyMins = parseFloat(document.getElementById('quickLatencySelect').value) || 0;
+            const latencyVal = document.getElementById('quickLatencySelect').value;
+            const latencyMins = latencyVal !== '' ? parseFloat(latencyVal) : 0;
             
-            // Deduct latency hours from time in bed to calculate net restorative sleep
             let netHours = timeInBed - (latencyMins / 60);
             if (netHours < 0.5) netHours = 0.5;
             netHours = parseFloat(netHours.toFixed(2));
@@ -1219,7 +1221,8 @@
             const date = document.getElementById('detDate').value;
             const bedtime = document.getElementById('detBedtime').value;
             const wakeTime = document.getElementById('detWakeTime').value;
-            const latencyMins = parseInt(document.getElementById('detLatency').value) || 0;
+            const latencyVal = document.getElementById('detLatency').value;
+            const latencyMins = latencyVal !== '' ? parseInt(latencyVal) : 0;
             const note = document.getElementById('detNote').value.trim();
 
             let [bHour, bMin] = bedtime.split(':').map(Number);
@@ -1794,13 +1797,13 @@
                 
                 document.getElementById('inputClientName').value = '';
                 document.getElementById('inputClientAge').value = '';
-                document.getElementById('inputClientGender').selectedIndex = 0;
-                document.getElementById('inputClientStress').selectedIndex = 0;
-                document.getElementById('inputClientTraining').selectedIndex = 0;
-                document.getElementById('quizLatency').selectedIndex = 0;
-                document.getElementById('quizQ1').selectedIndex = 0;
-                document.getElementById('quizQ2').selectedIndex = 0;
-                document.getElementById('quizQ3').selectedIndex = 0;
+                document.getElementById('inputClientGender').value = '';
+                document.getElementById('inputClientStress').value = '';
+                document.getElementById('inputClientTraining').value = '';
+                document.getElementById('quizLatency').value = '';
+                document.getElementById('quizQ1').value = '';
+                document.getElementById('quizQ2').value = '';
+                document.getElementById('quizQ3').value = '';
 
                 updateProfileHeaderDisplay();
                 updateLastUpdatedLabel();
@@ -1829,4 +1832,3 @@
 </body>
 </html>
 
-```
