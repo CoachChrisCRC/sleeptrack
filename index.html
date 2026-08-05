@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,6 +93,20 @@
     <!-- Main App Container -->
     <main class="w-full max-w-md px-4 space-y-4 mt-3">
 
+        <!-- Contextual Greeting Banner (Inline Card) -->
+        <div id="greetingPopup" class="glass-card rounded-2xl p-4 border border-emerald-500/30 bg-gradient-to-r from-emerald-950/80 to-emerald-900/40 relative shadow-lg transition-all duration-300 flex items-start space-x-3">
+            <div id="greetingIconContainer" class="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0 text-sm mt-0.5">
+                <i id="greetingIcon" class="fa-solid fa-sun"></i>
+            </div>
+            <div class="flex-1 pr-4">
+                <h4 id="greetingTitle" class="text-xs font-bold uppercase tracking-wider text-emerald-300">Good morning</h4>
+                <p id="greetingSubtitle" class="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">Let's set the tone for the day. Don't forget to log your rest and recovery metrics from last night.</p>
+            </div>
+            <button onclick="dismissGreeting()" class="absolute top-3 right-3 text-emerald-400/70 hover:text-white transition text-xs p-1" title="Dismiss">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
         <!-- SCREEN 1: DASHBOARD / TRACK -->
         <div id="screenDashboard" class="space-y-4">
             
@@ -155,14 +168,14 @@
                     </h3>
                     <div class="flex items-center space-x-2">
                         <span id="quickLogDateLabel" class="text-xs font-medium text-emerald-300/80">Quick Entry</span>
-                        <button onclick="openInfoModal('Quick Sleep / Nap Logging', 'Quickly record hours slept for last night or today using the slider or preset buttons.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
+                        <button onclick="openInfoModal('Quick Sleep / Nap Logging', 'Quickly record hours in bed and factor in sleep latency to log your net restorative rest.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
                     </div>
                 </div>
 
                 <div class="space-y-4">
                     <div>
                         <div class="flex justify-between text-xs text-emerald-200/70 mb-1">
-                            <span>Hours Slept / Nap Duration</span>
+                            <span>Total Time in Bed</span>
                             <span id="sliderValueDisplay" class="font-bold text-emerald-400 text-sm">7.5 hrs</span>
                         </div>
                         <input type="range" id="quickHoursSlider" min="0.5" max="14" step="0.5" value="7.5" oninput="onSliderChange(this.value)" class="w-full h-2 bg-emerald-950 rounded-lg appearance-none cursor-pointer">
@@ -175,9 +188,23 @@
                         <button onclick="setQuickHours(8.5)" class="py-2 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/20 rounded-xl text-xs font-semibold text-emerald-300 transition">8.5 hrs</button>
                     </div>
 
-                    <div>
-                        <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Session Label / Note (optional)</label>
-                        <input type="text" id="quickLogNote" placeholder="e.g. Main sleep, Afternoon Power Nap" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Time to Fall Asleep (Latency)</label>
+                            <select id="quickLatencySelect" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                <option value="">-- Select latency --</option>
+                                <option value="0">0 mins (Instant)</option>
+                                <option value="10">10 mins (Optimal)</option>
+                                <option value="20" selected>20 mins (Normal)</option>
+                                <option value="30">30 mins (Slight friction)</option>
+                                <option value="45">45 mins (High friction)</option>
+                                <option value="60">60 mins (Racing mind)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Session Note (optional)</label>
+                            <input type="text" id="quickLogNote" placeholder="e.g. Main sleep, Power nap" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -226,6 +253,7 @@
                         <div>
                             <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Time to Fall Asleep (Latency)</label>
                             <select id="detLatency" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                <option value="">-- Select latency --</option>
                                 <option value="0">0 mins (Instant)</option>
                                 <option value="10">10 mins (Optimal)</option>
                                 <option value="20" selected>20 mins (Normal)</option>
@@ -490,7 +518,7 @@
                         <i class="fa-solid fa-id-card text-emerald-400 mr-2"></i> Client Information
                     </h3>
                     <div class="flex items-center space-x-2">
-                        <button onclick="openInfoModal('Client Profile & Biometrics', 'Your age, stress load, training intensity, and sleep friction habits are dynamically synthesized by Coach Chris algorithm to calculate your optimal nightly sleep target.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
+                        <button onclick="openInfoModal('Client Profile & Biometrics', 'Your age, stress load, training intensity, and sleep latency habits are dynamically synthesized by Coach Chris algorithm to calculate your optimal nightly sleep target.')" class="text-emerald-400/70 hover:text-emerald-300 text-xs"><i class="fa-solid fa-circle-info"></i></button>
                         <button onclick="openClearProfileModal()" class="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 rounded-lg text-[10px] font-semibold flex items-center space-x-1 transition">
                             <i class="fa-solid fa-trash-can text-[9px]"></i>
                             <span>Clear</span>
@@ -512,7 +540,7 @@
                         <div>
                             <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Gender</label>
                             <select id="inputClientGender" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                <option value="" disabled selected>Select gender...</option>
+                                <option value="">-- Unselected --</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                                 <option value="Non-binary">Non-binary</option>
@@ -524,7 +552,7 @@
                     <div>
                         <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Lifestyle / Stress</label>
                         <select id="inputClientStress" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                            <option value="" disabled selected>Select stress level...</option>
+                            <option value="">-- Unselected --</option>
                             <option value="Low Stress / Relaxed">Low Stress / Relaxed</option>
                             <option value="Moderate Stress (Standard Work/Life)">Moderate Stress (Standard Work/Life)</option>
                             <option value="High Stress (Demanding Job / Shift Work)">High Stress (Demanding Job / Shift Work)</option>
@@ -535,7 +563,7 @@
                     <div>
                         <label class="block text-[11px] font-medium text-emerald-200/70 mb-1">Training Intensity</label>
                         <select id="inputClientTraining" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                            <option value="" disabled selected>Select training intensity...</option>
+                            <option value="">-- Unselected --</option>
                             <option value="Recovery / Mobility Focus">Recovery / Mobility Focus</option>
                             <option value="Moderate Functional Fitness (3-4x/wk)">Moderate Functional Fitness (3-4x/wk)</option>
                             <option value="High Intensity Strength & Conditioning">High Intensity Strength & Conditioning</option>
@@ -559,6 +587,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Average Time to Fall Asleep (Latency)</label>
                                 <select id="quizLatency" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">Under 15 mins (Smooth wind-down +0.0 hrs)</option>
                                     <option value="0.25">15-30 mins (Moderate friction +0.25 hrs)</option>
                                     <option value="0.5">30+ mins (High wind-down friction +0.5 hrs)</option>
@@ -567,7 +596,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Late caffeine or heavy meals before bed?</label>
                                 <select id="quizQ1" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                    <option value="" disabled selected>Select habit factor...</option>
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">More than 4 hours before bed (+0.0 hrs)</option>
                                     <option value="0.25">2-4 hours before bed (+0.25 hrs)</option>
                                     <option value="0.5">Within 2 hours of sleep (+0.5 hrs)</option>
@@ -576,7 +605,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Screen time or device use before sleep?</label>
                                 <select id="quizQ2" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                    <option value="" disabled selected>Select habit factor...</option>
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">Disconnect > 1 hour prior</option>
                                     <option value="0.25">Screens right up until bedtime</option>
                                     <option value="0.5">Frequently wake up looking at phone</option>
@@ -585,7 +614,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-emerald-200/80 mb-1">Nighttime awakenings / sleep continuity?</label>
                                 <select id="quizQ3" class="glass-input w-full rounded-xl px-3 py-2 text-xs">
-                                    <option value="" disabled selected>Select habit factor...</option>
+                                    <option value="">-- Unselected --</option>
                                     <option value="0">Sleep straight through</option>
                                     <option value="0.5">Wake up 1-2 times per night</option>
                                     <option value="1.0">Frequent disruptions / poor continuity</option>
@@ -727,7 +756,7 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Settings Modal (Cleaned up: Reminders removed) -->
     <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="glass-card rounded-3xl w-full max-w-sm p-6 border border-emerald-500/30 space-y-4">
             <div class="flex items-center justify-between mb-2">
@@ -749,13 +778,6 @@
                         <option value="14" selected>14 Days</option>
                         <option value="28">28 Days</option>
                     </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-emerald-200/70 mb-1">Bedtime Reminder (Nudge)</label>
-                    <div class="flex space-x-2">
-                        <input type="time" id="settingReminderTime" value="22:00" class="glass-input flex-1 rounded-xl px-3 py-2 text-xs">
-                        <button onclick="toggleBedtimeReminder()" id="reminderToggleBtn" class="px-4 py-2 bg-emerald-950 border border-emerald-500/30 text-emerald-300 rounded-xl text-xs font-semibold">Enable</button>
-                    </div>
                 </div>
 
                 <div class="pt-2 space-y-2">
@@ -781,7 +803,7 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        let settings = JSON.parse(localStorage.getItem('cr_sleep_settings')) || { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+        let settings = JSON.parse(localStorage.getItem('cr_sleep_settings')) || { target: 8.0, windowDays: '14' };
         let profile = JSON.parse(localStorage.getItem('cr_sleep_profile')) || { 
             name: '', 
             age: '', 
@@ -801,10 +823,17 @@
         let chartViewMode = '7'; // '7', '14', '28'
         let heatmapMonthOffset = 0;
 
+        const scientificallyAccurateSleepTips = [
+            "Keep your bedroom cool (around 18°C / 65°F) to facilitate the natural drop in core body temperature required for deep sleep.",
+            "Get 10-15 minutes of direct natural sunlight within an hour of waking to anchor your circadian rhythm and boost daytime alertness.",
+            "Avoid heavy meals and caffeine within 3 to 4 hours of your target sleep window to prevent elevated heart rate and fragmented sleep architecture.",
+            "Dim overhead lights and limit blue spectrum screen exposure 60 minutes before bed to allow natural melatonin production.",
+            "Maintain a consistent wake-up time 7 days a week to anchor your internal biological clock and minimize social jetlag."
+        ];
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('settingTarget').value = settings.target;
             document.getElementById('settingWindow').value = settings.windowDays;
-            document.getElementById('settingReminderTime').value = settings.reminderTime;
             document.getElementById('debtWindowSelect').value = settings.windowDays;
 
             document.getElementById('inputClientName').value = profile.name || '';
@@ -820,21 +849,46 @@
 
             updateProfileHeaderDisplay();
             updateLastUpdatedLabel();
-            
-            if (settings.reminderActive) {
-                document.getElementById('reminderToggleBtn').innerText = 'Active';
-                document.getElementById('reminderToggleBtn').classList.add('bg-emerald-600', 'text-white');
-            }
 
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('detDate').value = todayStr;
 
+            initSimpleGreeting();
             initChart();
             renderApp();
             initSwipeGestures();
-
-            setInterval(checkBedtimeReminder, 60000);
         });
+
+        function initSimpleGreeting() {
+            const hour = new Date().getHours();
+            const titleEl = document.getElementById('greetingTitle');
+            const subEl = document.getElementById('greetingSubtitle');
+            const iconEl = document.getElementById('greetingIcon');
+
+            // Daytime: 5:00 AM to 5:59 PM (5 to 17)
+            // Evening: 6:00 PM to 4:59 AM (18 to 4)
+            const isDaytime = hour >= 5 && hour < 18;
+            const randomTip = scientificallyAccurateSleepTips[Math.floor(Math.random() * scientificallyAccurateSleepTips.length)];
+
+            if (isDaytime) {
+                titleEl.innerText = "Good morning";
+                subEl.innerText = `Let's set the tone for the day. Remember to log your rest and recovery metrics! Tip: ${randomTip}`;
+                iconEl.className = "fa-solid fa-sun";
+            } else {
+                titleEl.innerText = "Good evening";
+                subEl.innerText = `Time to wind down and lock in your recovery. Don't forget to log today's rest! Tip: ${randomTip}`;
+                iconEl.className = "fa-solid fa-moon";
+            }
+        }
+
+        function dismissGreeting() {
+            const popup = document.getElementById('greetingPopup');
+            popup.style.opacity = '0';
+            popup.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                popup.classList.add('hidden');
+            }, 300);
+        }
 
         function openHowToUseModal() { document.getElementById('howToUseModal').classList.remove('hidden'); }
         function closeHowToUseModal() { document.getElementById('howToUseModal').classList.add('hidden'); }
@@ -874,7 +928,7 @@
                 profile = { name: '', age: '', gender: '', stress: '', training: '', latencyHabit: '', caffeine: '', screens: '', awakenings: '', lastUpdated: null };
                 document.getElementById('inputClientName').value = '';
                 document.getElementById('inputClientAge').value = '';
-                document.getElementById('inputClientGender').selectedIndex = 0;
+                document.getElementById('inputClientGender').value = '';
             } else {
                 profile.stress = '';
                 profile.training = '';
@@ -885,12 +939,12 @@
                 profile.lastUpdated = null;
             }
 
-            document.getElementById('inputClientStress').selectedIndex = 0;
-            document.getElementById('inputClientTraining').selectedIndex = 0;
-            document.getElementById('quizLatency').selectedIndex = 0;
-            document.getElementById('quizQ1').selectedIndex = 0;
-            document.getElementById('quizQ2').selectedIndex = 0;
-            document.getElementById('quizQ3').selectedIndex = 0;
+            document.getElementById('inputClientStress').value = '';
+            document.getElementById('inputClientTraining').value = '';
+            document.getElementById('quizLatency').value = '';
+            document.getElementById('quizQ1').value = '';
+            document.getElementById('quizQ2').value = '';
+            document.getElementById('quizQ3').value = '';
 
             updateProfileHeaderDisplay();
             updateLastUpdatedLabel();
@@ -1114,8 +1168,18 @@
         }
 
         function submitQuickLog(targetDay) {
-            const hours = parseFloat(document.getElementById('quickHoursSlider').value);
-            const note = document.getElementById('quickLogNote').value.trim() || (targetDay === 'yesterday' ? 'Main sleep (Last Night)' : 'Quick log / Nap');
+            const timeInBed = parseFloat(document.getElementById('quickHoursSlider').value);
+            const latencyVal = document.getElementById('quickLatencySelect').value;
+            const latencyMins = latencyVal !== '' ? parseFloat(latencyVal) : 0;
+            
+            let netHours = timeInBed - (latencyMins / 60);
+            if (netHours < 0.5) netHours = 0.5;
+            netHours = parseFloat(netHours.toFixed(2));
+
+            const noteInput = document.getElementById('quickLogNote').value.trim();
+            const latencyNote = latencyMins > 0 ? ` [${latencyMins}m latency]` : '';
+            const defaultNote = targetDay === 'yesterday' ? 'Main sleep (Last Night)' : 'Quick log / Nap';
+            const note = (noteInput ? noteInput + latencyNote : defaultNote + latencyNote);
             
             const targetDate = new Date();
             if (targetDay === 'yesterday') {
@@ -1123,9 +1187,9 @@
             }
             const dateStr = targetDate.toISOString().split('T')[0];
             
-            addLog(dateStr, hours, note);
+            addLog(dateStr, netHours, note);
             document.getElementById('quickLogNote').value = '';
-            showToast(`Logged ${hours} hrs for ${targetDay === 'yesterday' ? 'Last Night' : 'Today'} (${note}).`);
+            showToast(`Logged ${netHours} hrs net sleep for ${targetDay === 'yesterday' ? 'Last Night' : 'Today'}.`);
         }
 
         function toggleDetailedForm() {
@@ -1140,7 +1204,8 @@
             const date = document.getElementById('detDate').value;
             const bedtime = document.getElementById('detBedtime').value;
             const wakeTime = document.getElementById('detWakeTime').value;
-            const latencyMins = parseInt(document.getElementById('detLatency').value) || 0;
+            const latencyVal = document.getElementById('detLatency').value;
+            const latencyMins = latencyVal !== '' ? parseInt(latencyVal) : 0;
             const note = document.getElementById('detNote').value.trim();
 
             let [bHour, bMin] = bedtime.split(':').map(Number);
@@ -1630,43 +1695,17 @@
             reader.readAsText(file);
         }
 
-        function toggleBedtimeReminder() {
-            settings.reminderActive = !settings.reminderActive;
-            const btn = document.getElementById('reminderToggleBtn');
-            if (settings.reminderActive) {
-                btn.innerText = 'Active';
-                btn.classList.add('bg-emerald-600', 'text-white');
-                showToast("Bedtime reminder activated.");
-            } else {
-                btn.innerText = 'Enable';
-                btn.classList.remove('bg-emerald-600', 'text-white');
-                showToast("Bedtime reminder disabled.");
-            }
-            manualSaveData();
-        }
-
-        function checkBedtimeReminder() {
-            if (!settings.reminderActive) return;
-            const now = new Date();
-            const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-            if (currentTime === settings.reminderTime) {
-                showToast("Wind down reminder: Prepare for restful sleep tonight.");
-            }
-        }
-
         function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); }
         function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
         
         function saveSettings() {
             const t = parseFloat(document.getElementById('settingTarget').value);
             const w = document.getElementById('settingWindow').value;
-            const r = document.getElementById('settingReminderTime').value;
             if (t > 0) {
                 settings.target = t;
                 settings.windowDays = w;
-                settings.reminderTime = r;
                 document.getElementById('debtWindowSelect').value = w;
-                closeSettings();
+                closeSettings();     
                 manualSaveData();
                 renderApp();
                 showToast("Settings updated successfully.");
@@ -1675,13 +1714,10 @@
 
         function resetSettingsOnly() {
             if (confirm("Reset settings back to blank/default preferences? (Your logs and profile remain untouched)")) {
-                settings = { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+                settings = { target: 8.0, windowDays: '14' };
                 document.getElementById('settingTarget').value = settings.target;
                 document.getElementById('settingWindow').value = settings.windowDays;
-                document.getElementById('settingReminderTime').value = settings.reminderTime;
                 document.getElementById('debtWindowSelect').value = settings.windowDays;
-                document.getElementById('reminderToggleBtn').innerText = 'Enable';
-                document.getElementById('reminderToggleBtn').classList.remove('bg-emerald-600', 'text-white');
                 
                 localStorage.setItem('cr_sleep_settings', JSON.stringify(settings));
                 renderApp();
@@ -1694,25 +1730,22 @@
             if (confirm("Warning: Full 'Clear All Data' will wipe all sleep logs, profile data, and settings, resetting the entire app back to its pristine base state. Proceed?")) {
                 localStorage.clear();
                 sleepLogs = [];
-                settings = { target: 8.0, windowDays: '14', reminderTime: '22:00', reminderActive: false };
+                settings = { target: 8.0, windowDays: '14' };
                 profile = { name: '', age: '', gender: '', stress: '', training: '', latencyHabit: '', caffeine: '', screens: '', awakenings: '', lastUpdated: null };
                 
                 document.getElementById('settingTarget').value = settings.target;
                 document.getElementById('settingWindow').value = settings.windowDays;
-                document.getElementById('settingReminderTime').value = settings.reminderTime;
                 document.getElementById('debtWindowSelect').value = settings.windowDays;
-                document.getElementById('reminderToggleBtn').innerText = 'Enable';
-                document.getElementById('reminderToggleBtn').classList.remove('bg-emerald-600', 'text-white');
                 
                 document.getElementById('inputClientName').value = '';
                 document.getElementById('inputClientAge').value = '';
-                document.getElementById('inputClientGender').selectedIndex = 0;
-                document.getElementById('inputClientStress').selectedIndex = 0;
-                document.getElementById('inputClientTraining').selectedIndex = 0;
-                document.getElementById('quizLatency').selectedIndex = 0;
-                document.getElementById('quizQ1').selectedIndex = 0;
-                document.getElementById('quizQ2').selectedIndex = 0;
-                document.getElementById('quizQ3').selectedIndex = 0;
+                document.getElementById('inputClientGender').value = '';
+                document.getElementById('inputClientStress').value = '';
+                document.getElementById('inputClientTraining').value = '';
+                document.getElementById('quizLatency').value = '';
+                document.getElementById('quizQ1').value = '';
+                document.getElementById('quizQ2').value = '';
+                document.getElementById('quizQ3').value = '';
 
                 updateProfileHeaderDisplay();
                 updateLastUpdatedLabel();
@@ -1740,5 +1773,3 @@
     </script>
 </body>
 </html>
-
-```
